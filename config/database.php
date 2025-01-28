@@ -34,6 +34,11 @@ return [
     */
 
     'connections' => [
+        'mongodb' => [
+            'driver'   => 'mongodb',
+            'dsn'      => env('DB_URI', 'mongodb+srv://farahgdaim:bffany@cluster0.tbse0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'),
+            'database' => env('DB_DATABASE', 'CarSell'),
+        ],
 
         'sqlite' => [
             'driver' => 'sqlite',
@@ -92,11 +97,8 @@ return [
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
-        'mongodb' => [
-            'driver' => 'mongodb',
-            'dsn' => env('DB_URI', 'mongodb+srv://username:password@<atlas-cluster-uri>/myappdb?retryWrites=true&w=majority'),
-            'database' => 'CarSell',
-        ],
+        
+
 
     ],
 

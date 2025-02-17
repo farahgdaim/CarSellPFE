@@ -7,20 +7,11 @@ use MongoDB\Laravel\Eloquent\Model;
 
 class Voiture extends Model
 {
-    protected $connection = 'mongodb';
-    protected $collection ='voitures';
-    
     use HasFactory;
+    protected $connection = 'mongodb';
     protected $fillable = [
-        'Marque',
-        'Modèle',
-        'Puissance',
-        'Couleur',
-        'Année',
-        'Kilometrage',
-        'DateDeMiseEnCirculation',
-        'Energie'
+        'Marque', 'Modèle', 'Puissance', 'Année',
+        'DateDeMiseEnCirculation', 'Kilométrage',
+        'Couleur', 'Energie'
     ];
-    
-    
 }

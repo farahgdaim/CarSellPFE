@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'mysql'),
+    'default' => env('DB_CONNECTION', 'mongodb'),
 
     /*
     |--------------------------------------------------------------------------
@@ -34,13 +34,13 @@ return [
     */
 
     'connections' => [
-        
+
         'mongodb' => [
             'driver'   => 'mongodb',
-            'dsn'      => env('DB_URI', 'mongodb+srv://farahgdaim:bffany@cluster0.tbse0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'),
+            'dsn'      => env('DB_URI'),
             'database' => env('DB_DATABASE', 'CarSell'),
         ],
-
+/*
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DATABASE_URL'),
@@ -97,7 +97,7 @@ return [
             'prefix_indexes' => true,
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
-        ],
+        ],*/
 
     ],
 

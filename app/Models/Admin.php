@@ -2,19 +2,30 @@
 
 namespace App\Models;
 
+use Tymon\JWTAuth\Contracts\JWTSubject;
 use MongoDB\Laravel\Eloquent\Model;
+use Illuminate\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 
-class Admin extends Utilisateur
+class Admin extends Model implements JWTSubject, AuthenticatableContract
 {
-    protected $connection = 'mongodb';
-    protected $collection = 'utilisateurs';
+    use Authenticatable;
 
-    public static function boot()
+    protected $connection = 'mongodb';
+    protected $collection = 'admins'; // Utilisation de la collection dédiée aux admins
+
+    protected $fillable = ['nom', 'prenom', 'email', 'password'];
+
+    protected $hidden = ['password'];
+
+    // ================== JWT Auth Requirements ==================
+    public function getJWTIdentifier()
     {
-        parent::boot();
-        static::creating(function ($admin) {
-            $admin->role = 'admin';
-        });
+        return $this->getKey();
+    }
+    public function getJWTCustomClaims()
+    {
+        return [];
     }
 
 }

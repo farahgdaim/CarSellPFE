@@ -7,23 +7,13 @@ use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-/**
- * Classe Utilisateur
- * Représente un utilisateur avec ses attributs et ses sous-documents.
- */
 class Utilisateur extends Model implements JWTSubject, AuthenticatableContract
 {
     use Authenticatable;
 
-    // On précise qu'on utilise la connexion MongoDB
     protected $connection = 'mongodb';
-
-    // Nom de la collection dans la base
     protected $collection = 'utilisateurs';
 
-    /**
-     * Les champs (et sous-documents) qu'on peut remplir.
-     */
     protected $fillable = [
         'nom',
         'prenom',
@@ -33,43 +23,24 @@ class Utilisateur extends Model implements JWTSubject, AuthenticatableContract
         'dateInscription',
         'notifications',
         'paiements',
-        // Nouveaux attributs pour la demande d'expertise
-        'role',
-        'expertRequested',
-        'certifications',
-        'domaineExpertise',
-        'anneesExperience'
+        // Facultatif : référence à l'admin (exemple d'usage)
+        'ref_id_admin'
     ];
-    
 
-    /**
-     * Champs à masquer dans les retours JSON (ex: le mot de passe).
-     */
     protected $hidden = [
         'password'
     ];
 
-    // Valeurs par défaut
-    protected $attributes = [
-        'role'            => 'user',   // par défaut, simple utilisateur
-        'expertRequested' => false     // par défaut, pas de demande d'expertise
-    ];
-
-    /**
-     * Ajoute une notification dans le tableau notifications.
-     *
-     * @param  string $contenu   Contenu du message
-     * @param  string $statut    Statut de la notification (ex: "non_lu", "lu")
-     */
+    // Exemple de méthode pour ajouter une notification avec référence à l'utilisateur
     public function addNotification(string $contenu, string $statut = 'non_lu')
     {
         $notification = [
-            'contenu' => $contenu,
-            'date'    => now(),
-            'statut'  => $statut,
+            'ref_id_user' => $this->_id, // référence à cet utilisateur
+            'contenu'     => $contenu,
+            'date'        => now(),
+            'statut'      => $statut,
         ];
 
-        // push() permet d'ajouter un élément dans un tableau MongoDB
         $this->push('notifications', $notification);
     }
 
@@ -103,6 +74,9 @@ class Utilisateur extends Model implements JWTSubject, AuthenticatableContract
     public function addPaiement(float $montant, string $statutPaiement = 'en_attente')
     {
         $paiement = [
+            
+            'ref_id_paying' => $this->_id, 
+            //'ref_id_receiving' => not sure yet, 
             'montant'         => $montant,
             'date'            => now(),
             'statutPaiement'  => $statutPaiement

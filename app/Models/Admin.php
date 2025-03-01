@@ -11,16 +11,18 @@ class Admin extends Model implements JWTSubject, AuthenticatableContract
 {
     use Authenticatable;
 
-    protected $collection = 'utilisateurs'; // Utilise la même collection que les utilisateurs
-    protected $fillable = ['name', 'email', 'password', 'role'];
+    protected $connection = 'mongodb';
+    protected $collection = 'admins'; // Utilisation de la collection dédiée aux admins
+
+    protected $fillable = ['nom', 'prenom', 'email', 'password'];
+
+    protected $hidden = ['password'];
 
     // ================== JWT Auth Requirements ==================
-
     public function getJWTIdentifier()
     {
         return $this->getKey();
     }
-
     public function getJWTCustomClaims()
     {
         return [];

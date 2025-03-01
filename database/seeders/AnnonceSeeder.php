@@ -14,18 +14,23 @@ class AnnonceSeeder extends Seeder
             'Description' => 'Très bon état, faible kilométrage.',
             'DatePub' => now(),
             'Prix' => 20000,
-            'isSponsored' => false,
+            'status' => 'disponible',
             'Ref_id_admin' => 1,
             'Ref_id_user' => 2,
-            'voiture' => [  // Embedding directement
+            'vehicule' => [ 
+                'Categorie'=>'voiture', // Embedding directement
                 'Marque' => 'Peugeot',
                 'Modèle' => '208',
+                'TypeCarburant'=>'Essence',
                 'Puissance' => 120,
-                'Année' => 2019,
                 'DateDeMiseEnCirculation' => '2019-06-15',
+                'Cylindre' => '3 Cylindres',
                 'Kilométrage' => 30000,
-                'Couleur' => 'Rouge',
-                'Energie' => 'Essence'
+                'nbPortes'=>'4',
+                'boiteVitesse'=>'automatique',
+                'etat'=>'neuf',
+                'Equipement' => 'Jantes Aluminium',
+                
             ],
             'images' => [  // Embedding directement les images
                 [

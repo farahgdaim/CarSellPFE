@@ -35,44 +35,42 @@ class AnnonceController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function create(Request $request)
     {
         // Validation des données
-        $request->validate([
+        $data= $request->validate([
             'Titre' => 'required|string|max:255',
             'Description' => 'required|string',
             'DatePub' => 'required|date',
             'Prix' => 'required|numeric',
-            'isSponsored' => 'required|boolean',
-            'Ref_id_admin' => 'required',
+            
+            
             'Ref_id_user' => 'required',
-            'voiture' => 'required|array',
-            'voiture.Marque' => 'required|string',
-            'voiture.Modèle' => 'required|string',
-            'voiture.Puissance' => 'required|numeric',
-            'voiture.Année' => 'required|integer',
-            'voiture.DateDeMiseEnCirculation' => 'required|date',
-            'voiture.Kilométrage' => 'required|numeric',
-            'voiture.Couleur' => 'required|string',
-            'voiture.Energie' => 'required|string',
+
+            'vehicule' => 'required|array',
+            'vehicule.Categorie' => 'required|string',
+            'vehicule.Marque' => 'required|string',
+            'vehicule.Modèle' => 'required|string',
+            'vehicule.TypeCarburant' => 'required|string|in:Essence,Diesel,GPL,Electrique,Hybride',
+            'vehicule.Puissance' => 'required|numeric',
+            'vehicule.DateDeMiseEnCirculation' => 'required|date',
+            'vehicule.Cylindre'=> 'required|string',
+            'vehicule.Kilométrage' => 'required|numeric',
+            'vehicule.nbPortes'=> 'required|string',
+            'vehicule.boiteVitesse'=> 'required|string|in:automatique,manuelle',
+            'vehicule.etat'=> 'required|string|in:neuf,excellent,correct,endommagé',
+            'vehicule.equipement' => 'required|string',
+            
             'images' => 'nullable|array',
             'images.*.chemin' => 'required|string',
             'images.*.format' => 'required|string',
             'images.*.taille' => 'required|string',
         ]);
-            $annonce =Annonce::create($request->all());
-        // Création de l'annonce avec ses documents imbriqués
-        /* $annonce = Annonce::create([
-            'Titre' => $request->Titre,
-            'Description' => $request->Description,
-            'DatePub' => $request->DatePub,
-            'Prix' => $request->Prix,
-            'isSponsored' => $request->isSponsored ?? false,
-            'Ref_id_admin' => $request->Ref_id_admin,
-            'Ref_id_user' => $request->Ref_id_user,
-            'voiture' => $request->voiture,
-            'images' => $request->images ?? []
-        ]); */
+        //$data['Ref_id_user'] = auth()->user()->_id; // Si tu utilises le modèle Utilisateur
+            $data['is_reported']= false ;
+            $data ['reported_by']=[];
+            $annonce =Annonce::create($data);
+        
 
         return response()->json([
             'status' => 201,
@@ -81,7 +79,10 @@ class AnnonceController extends Controller
     }
 
     
-   
+   public function report ($id){
+    $annonce = Annonce::find($id);
+    $userId = auth()->user()->_id;
+   }
 
     /**
      * Update the specified resource in storage.
@@ -101,15 +102,20 @@ class AnnonceController extends Controller
             'DatePub' => 'date',
             'Prix' => 'numeric',
             'isSponsored' => 'boolean',
-            'voiture' => 'array',
-            'voiture.Marque' => 'string',
-            'voiture.Modèle' => 'string',
-            'voiture.Puissance' => 'numeric',
-            'voiture.Année' => 'integer',
-            'voiture.DateDeMiseEnCirculation' => 'date',
-            'voiture.Kilométrage' => 'numeric',
-            'voiture.Couleur' => 'string',
-            'voiture.Energie' => 'string',
+            
+            'vehicule' => 'array',
+            'vehicule.Categorie' => 'string',
+            'vehicule.Marque' => 'string',
+            'vehicule.Modèle' => 'string',
+            'vehicule.TypeCarburant' => 'string|in:Essence,Diesel,GPL,Electrique,Hybride',
+            'vehicule.Puissance' => 'numeric',
+            'vehicule.DateDeMiseEnCirculation' => 'date',
+            'vehicule.Cylindre'=> 'string',
+            'vehicule.Kilométrage' => 'numeric',
+            'vehicule.nbPortes'=> 'string',
+            'vehicule.boiteVitesse'=> 'string|in:automatique,manuelle',
+            'vehicule.etat'=> 'string|in:neuf,excellent,correct,endommagé',
+            'vehicule.equipement' => 'string',
             'images' => 'nullable|array',
             'images.*.chemin' => 'string',
             'images.*.format' => 'string',

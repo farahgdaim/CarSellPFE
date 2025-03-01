@@ -11,15 +11,17 @@ class Sponsoring extends Model
     protected $collection = 'sponsoring'; 
 
     protected $fillable = [
+        'nomSponsoring',
+        'description',
+        'prix',
         'durée',
-        'montantPaye',
         'id_annonce' 
     ];
 
     // Relation avec Annonce
     public function annonce()
     {
-        return $this->belongsTo(Annonce::class, 'id_annonce');
+        return $this->belongsTo(Annonce::class, 'id_annonce','_id');
     }
 
 }

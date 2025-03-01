@@ -1,12 +1,12 @@
 <?php
 
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MongoDB\Laravel\Eloquent\Model;
 
 class Annonce extends Model
 {
+
     use HasFactory;
     protected $connection = 'mongodb'; // Utilisation de MongoDB
     protected $collection = 'annonces'; // Nom de la collection MongoDB
@@ -39,5 +39,6 @@ class Annonce extends Model
     public function sponsorings()
     {
         return $this->hasMany(Sponsoring::class, 'id_annonce', '_id');
+
     }
 }

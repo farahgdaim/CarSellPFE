@@ -27,10 +27,15 @@ class NotificationController extends Controller
         ]);
 
         $utilisateur = auth()->user();
-        $utilisateur->addNotification(
-            $request->contenu,
-            $request->statut
-        );
+        
+        $notification = [
+            'ref_id_user' => $utilisateur->_id, // référence à cet utilisateur
+            'contenu'     => $request->contenu,
+            'date'        => now(),
+            'statut'      => $request->statut,
+        ];
+
+        $utilisateur->push('notifications', $notification);
 
         return response()->json(['message' => 'Notification ajoutée avec succès']);
     }
@@ -45,7 +50,19 @@ class NotificationController extends Controller
         ]);
 
         $utilisateur = auth()->user();
-        $utilisateur->markNotificationAsRead($request->index);
+
+        // Récupérer le tableau complet des notifications
+        $notifications = $utilisateur->notifications ?? [];
+
+        // Vérifier si l'index existe dans le tableau
+        if (isset($notifications[$index])) {
+            // Modifier la notification localement
+            $notifications[$index]['statut'] = 'lu';
+
+            // Réassigner le tableau modifié à la propriété notifications
+            $utilisateur->notifications = $notifications;
+            $utilisateur->save();
+        }
 
         return response()->json(['message' => 'Notification marquée comme lue']);
     }

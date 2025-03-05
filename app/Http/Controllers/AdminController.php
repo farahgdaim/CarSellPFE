@@ -104,6 +104,7 @@ class AdminController extends Controller
      */
     public function me()
     {
+        \Log::info('Admin auth check:', ['user' => auth('admin')->user()]);
         return response()->json(auth('admin')->user());
     }
 
@@ -112,9 +113,12 @@ class AdminController extends Controller
      */
     public function listPendingExpertRequests()
     {
-        $pendingExperts = Expert::where('status', 'pending')->get();
-        return response()->json($pendingExperts);
+        \Log::info('Admin auth check in listPendingExpertRequests:', ['user' => auth('admin')->user()]);
+        return response()->json(Expert::where('status', 'pending')->get());
     }
+    
+
+
 
     /**
      * (ADMIN) Accept an expert role request.

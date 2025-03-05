@@ -17,25 +17,24 @@ use App\Http\Controllers\PaiementController;
 |
 */
 Route::prefix('admin')->group(function () {
-    // Public route for admin creation
     Route::post('register', [AdminController::class, 'store']);
-    
-    // Public login route for admin
     Route::post('login', [AdminController::class, 'login']);
     
-    // Protected routes for admin actions
     Route::middleware('auth:admin')->group(function () {
         Route::post('logout', [AdminController::class, 'logout']);
         Route::get('me', [AdminController::class, 'me']);
+        // Routes spécifiques avant les routes génériques
+        Route::get('expert-requests', [AdminController::class, 'listPendingExpertRequests']);
+        Route::post('expert-request/{requestId}/accept', [AdminController::class, 'acceptExpertRequest']);
+        Route::post('expert-request/{requestId}/reject', [AdminController::class, 'rejectExpertRequest']);
+        
+        // Routes génériques à la fin
         Route::get('/', [AdminController::class, 'index']);
         Route::get('{id}', [AdminController::class, 'show']);
         Route::delete('{id}', [AdminController::class, 'destroy']);
-        // Route to list all pending expert requests
-        Route::get('expert-requests', [AdminController::class, 'listPendingExpertRequests']);
-        Route::post('expert-request/{requestId}/accept', [AdminController::class, 'acceptExpertRequest']);
-        Route::post('expert-request/{requestId}/reject', [AdminController::class, 'rejectExpertRequest']);        
     });
 });
+
 
 /*
 |--------------------------------------------------------------------------

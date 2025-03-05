@@ -38,9 +38,9 @@ class ExpertController extends Controller
         $demande->save();
 
         // Notification au demandeur
-        $demandeur = \App\Models\Utilisateur::find($demande->ref_id_demandeur);
+        $demandeur = Utilisateur::find($demande->ref_id_demandeur);
         if ($demandeur) {
-            $demandeur->addNotification("Votre demande d’évaluation a été acceptée par l’expert.");
+            app('App\Http\Controllers\NotificationController')->store(new Request(['contenu' => "Votre demande d’évaluation a été acceptée par l’expert.", 'statut' => 'non_lu']), $demandeur);
         }
 
         return response()->json([
@@ -65,9 +65,9 @@ class ExpertController extends Controller
         $demande->save();
 
         // Notification au demandeur
-        $demandeur = \App\Models\Utilisateur::find($demande->ref_id_demandeur);
+        $demandeur = Utilisateur::find($demande->ref_id_demandeur);
         if ($demandeur) {
-            $demandeur->addNotification("Votre demande d’évaluation a été rejetée par l’expert.");
+            app('App\Http\Controllers\NotificationController')->store(new Request(['contenu' => "Votre demande d’évaluation a été rejetée par l’expert.", 'statut' => 'non_lu']), $demandeur);
         }
 
         return response()->json([
@@ -100,9 +100,9 @@ class ExpertController extends Controller
         $demande->save();
 
         // Notification au demandeur
-        $demandeur = \App\Models\Utilisateur::find($demande->ref_id_demandeur);
+        $demandeur = Utilisateur::find($demande->ref_id_demandeur);
         if ($demandeur) {
-            $demandeur->addNotification("Le rapport d’expertise est prêt. Vous pouvez le consulter.");
+            app('App\Http\Controllers\NotificationController')->store(new Request(['contenu' => "Le rapport d’expertise est prêt. Vous pouvez le consulter.", 'statut' => 'non_lu']), $demandeur);
         }
 
         return response()->json([

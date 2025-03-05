@@ -6,15 +6,47 @@ use Illuminate\Http\Request;
 use App\Models\DemandeEvaluation;
 use App\Models\RapportExpertise;
 use App\Models\Utilisateur;
+use App\Models\Expert;
 
 class ExpertController extends Controller
 {
+    /**
+     * Vérifie que l'utilisateur authentifié possède un rôle d'expert accepté.
+     */
+    protected function authorizeExpert() {
+        $user = auth()->user();
+        $expert = Expert::where('ref_id_utilisateur', $user->_id)->first();
+        if (!$expert || $expert->status !== 'accepted') {
+            return null;
+        }
+        return $expert;
+    }
+    
+    /**
+     * Private helper method to notify a given user.
+     */
+    private function notifyUser(Utilisateur $utilisateur, string $contenu, string $statut = 'non_lu')
+    {
+        $notification = [
+            'ref_id_user' => $utilisateur->_id,
+            'contenu'     => $contenu,
+            'date'        => now(),
+            'statut'      => $statut,
+        ];
+
+        $utilisateur->push('notifications', $notification);
+    }
+    
     /**
      * Pour l'expert : liste des demandes d'évaluation en attente qui lui sont adressées.
      */
     public function listPendingEvaluations(Request $request)
     {
         $user = auth()->user();
+        if (!$this->authorizeExpert()) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé, vous n\'êtes pas un expert.'], 403);
+        }
+        
         $demandes = DemandeEvaluation::where('ref_id_expert', $user->_id)
             ->where('status', 'pending')
             ->get();
@@ -27,6 +59,11 @@ class ExpertController extends Controller
      */
     public function acceptEvaluation(Request $request, $demandeId)
     {
+        $user = auth()->user();
+        if (!$this->authorizeExpert()) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé, vous n\'êtes pas un expert.'], 403);
+        }
+        
         $demande = DemandeEvaluation::find($demandeId);
         if (!$demande) {
             return response()->json(['message' => 'Demande d’évaluation non trouvée'], 404);
@@ -34,13 +71,18 @@ class ExpertController extends Controller
         if ($demande->status !== 'pending') {
             return response()->json(['message' => 'Cette demande n’est plus en attente'], 400);
         }
+        // Vérifier que la demande appartient bien à l'expert authentifié
+        if ($demande->ref_id_expert != $user->_id) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé à traiter cette demande'], 403);
+        }
+        
         $demande->status = 'accepted';
         $demande->save();
 
         // Notification au demandeur
         $demandeur = Utilisateur::find($demande->ref_id_demandeur);
         if ($demandeur) {
-            app('App\Http\Controllers\NotificationController')->store(new Request(['contenu' => "Votre demande d’évaluation a été acceptée par l’expert.", 'statut' => 'non_lu']), $demandeur);
+            $this->notifyUser($demandeur, "Votre demande d’évaluation a été acceptée par l’expert.");
         }
 
         return response()->json([
@@ -54,6 +96,11 @@ class ExpertController extends Controller
      */
     public function rejectEvaluation(Request $request, $demandeId)
     {
+        $user = auth()->user();
+        if (!$this->authorizeExpert()) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé, vous n\'êtes pas un expert.'], 403);
+        }
+        
         $demande = DemandeEvaluation::find($demandeId);
         if (!$demande) {
             return response()->json(['message' => 'Demande d’évaluation non trouvée'], 404);
@@ -61,13 +108,18 @@ class ExpertController extends Controller
         if ($demande->status !== 'pending') {
             return response()->json(['message' => 'Cette demande n’est plus en attente'], 400);
         }
+        // Vérifier que la demande appartient bien à l'expert authentifié
+        if ($demande->ref_id_expert != $user->_id) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé à traiter cette demande'], 403);
+        }
+        
         $demande->status = 'rejected';
         $demande->save();
 
         // Notification au demandeur
         $demandeur = Utilisateur::find($demande->ref_id_demandeur);
         if ($demandeur) {
-            app('App\Http\Controllers\NotificationController')->store(new Request(['contenu' => "Votre demande d’évaluation a été rejetée par l’expert.", 'statut' => 'non_lu']), $demandeur);
+            $this->notifyUser($demandeur, "Votre demande d’évaluation a été rejetée par l’expert.");
         }
 
         return response()->json([
@@ -85,11 +137,20 @@ class ExpertController extends Controller
             'contenu' => 'required|string'
         ]);
 
+        $user = auth()->user();
+        if (!$this->authorizeExpert()) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé, vous n\'êtes pas un expert.'], 403);
+        }
+        
         $demande = DemandeEvaluation::find($demandeId);
         if (!$demande) {
             return response()->json(['message' => 'Demande d’évaluation non trouvée'], 404);
         }
-
+        // Vérifier que la demande appartient bien à l'expert authentifié
+        if ($demande->ref_id_expert != $user->_id) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé à traiter cette demande'], 403);
+        }
+        
         $rapport = RapportExpertise::create([
             'contenu'       => $request->input('contenu'),
             'ref_id_expert' => $demande->ref_id_expert,
@@ -102,7 +163,7 @@ class ExpertController extends Controller
         // Notification au demandeur
         $demandeur = Utilisateur::find($demande->ref_id_demandeur);
         if ($demandeur) {
-            app('App\Http\Controllers\NotificationController')->store(new Request(['contenu' => "Le rapport d’expertise est prêt. Vous pouvez le consulter.", 'statut' => 'non_lu']), $demandeur);
+            $this->notifyUser($demandeur, "Le rapport d’expertise est prêt. Vous pouvez le consulter.");
         }
 
         return response()->json([

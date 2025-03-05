@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Utilisateur;
 use App\Models\Admin;
-use App\Models\Expert; // Added for listing expert requests
+use App\Models\Expert; // For listing expert requests
 use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
@@ -104,7 +105,6 @@ class AdminController extends Controller
      */
     public function me()
     {
-        \Log::info('Admin auth check:', ['user' => auth('admin')->user()]);
         return response()->json(auth('admin')->user());
     }
 
@@ -113,19 +113,15 @@ class AdminController extends Controller
      */
     public function listPendingExpertRequests()
     {
-        \Log::info('Admin auth check in listPendingExpertRequests:', ['user' => auth('admin')->user()]);
         return response()->json(Expert::where('status', 'pending')->get());
     }
-    
-
-
 
     /**
      * (ADMIN) Accept an expert role request.
      */
     public function acceptExpertRequest(Request $request, $requestId)
     {
-        $expertRequest = \App\Models\Expert::find($requestId);
+        $expertRequest = Expert::find($requestId);
         if (!$expertRequest) {
             return response()->json(['message' => 'Expert request not found'], 404);
         }
@@ -136,14 +132,13 @@ class AdminController extends Controller
         $expertRequest->save();
 
         // Notify the utilisateur
-        $utilisateur = \App\Models\Utilisateur::find($expertRequest->ref_id_utilisateur);
+        $utilisateur = Utilisateur::find($expertRequest->ref_id_utilisateur);
         if ($utilisateur) {
-            $utilisateur->addNotification("Votre demande pour devenir expert a été acceptée.");
-            // Optionally, update the utilisateur record to reflect expert status
+            $this->notifyUtilisateur($utilisateur, "Votre demande pour devenir expert a été acceptée.");
         }
 
         return response()->json([
-            'message' => 'Expert request accepted',
+            'message'       => 'Expert request accepted',
             'expertRequest' => $expertRequest
         ]);
     }
@@ -153,7 +148,7 @@ class AdminController extends Controller
      */
     public function rejectExpertRequest(Request $request, $requestId)
     {
-        $expertRequest = \App\Models\Expert::find($requestId);
+        $expertRequest = Expert::find($requestId);
         if (!$expertRequest) {
             return response()->json(['message' => 'Expert request not found'], 404);
         }
@@ -164,15 +159,29 @@ class AdminController extends Controller
         $expertRequest->save();
 
         // Notify the utilisateur
-        $utilisateur = \App\Models\Utilisateur::find($expertRequest->ref_id_utilisateur);
+        $utilisateur = Utilisateur::find($expertRequest->ref_id_utilisateur);
         if ($utilisateur) {
-            $utilisateur->addNotification("Votre demande pour devenir expert a été rejetée.");
+            $this->notifyUtilisateur($utilisateur, "Votre demande pour devenir expert a été rejetée.");
         }
 
         return response()->json([
-            'message' => 'Expert request rejected',
+            'message'       => 'Expert request rejected',
             'expertRequest' => $expertRequest
         ]);
     }
 
+    /**
+     * Private helper method to notify a user.
+     */
+    private function notifyUtilisateur(Utilisateur $utilisateur, string $message, string $statut = 'non_lu')
+    {
+        $notification = [
+            'ref_id_user' => $utilisateur->_id,
+            'contenu'     => $message,
+            'date'        => now(),
+            'statut'      => $statut,
+        ];
+
+        $utilisateur->push('notifications', $notification);
+    }
 }

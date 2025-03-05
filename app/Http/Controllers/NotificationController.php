@@ -49,21 +49,26 @@ class NotificationController extends Controller
             'index' => 'required|integer'
         ]);
 
-        $utilisateur = auth()->user();
+        // Retrieve the index from the request
+        $index = $request->input('index');
 
-        // Récupérer le tableau complet des notifications
+        // Get the authenticated user's notifications
+        $utilisateur = auth()->user();
         $notifications = $utilisateur->notifications ?? [];
 
-        // Vérifier si l'index existe dans le tableau
+        // Check if the given index exists in the notifications array
         if (isset($notifications[$index])) {
-            // Modifier la notification localement
+            // Update the notification's status to 'lu'
             $notifications[$index]['statut'] = 'lu';
 
-            // Réassigner le tableau modifié à la propriété notifications
+            // Save the updated notifications back to the user model
             $utilisateur->notifications = $notifications;
             $utilisateur->save();
+
+            return response()->json(['message' => 'Notification marquée comme lue']);
         }
 
-        return response()->json(['message' => 'Notification marquée comme lue']);
+        return response()->json(['message' => 'Notification not found.'], 404);
     }
+
 }

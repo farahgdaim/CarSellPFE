@@ -12,7 +12,6 @@ class NotificationController extends Controller
      */
     public function index()
     {
-        // auth()->user() renvoie l'utilisateur actuellement connecté
         $utilisateur = auth()->user();
         return response()->json($utilisateur->notifications);
     }

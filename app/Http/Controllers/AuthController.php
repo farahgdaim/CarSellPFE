@@ -16,14 +16,13 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'nom'             => 'required|string',
-            'prenom'          => 'required|string',
-            'email'           => 'required|email|unique:utilisateurs,email',
-            'password'        => 'required|string|min:6',
-            'telephone'       => 'required|string',
+            'nom'       => 'required|string',
+            'prenom'    => 'required|string',
+            'email'     => 'required|email|unique:utilisateurs,email',
+            'password'  => 'required|string|min:6',
+            'telephone' => 'required|string',
         ]);
 
-        // Création de l'utilisateur
         $utilisateur = Utilisateur::create([
             'nom'             => $request->nom,
             'prenom'          => $request->prenom,
@@ -31,7 +30,6 @@ class AuthController extends Controller
             'password'        => Hash::make($request->password),
             'telephone'       => $request->telephone,
             'dateInscription' => now(),
-            // on initialise éventuellement notifications / paiements vides
             'notifications'   => [],
             'paiements'       => []
         ]);

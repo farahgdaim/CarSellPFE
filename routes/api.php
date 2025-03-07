@@ -34,8 +34,12 @@ Route::prefix('admin')->group(function () {
     Route::post('login', [AdminController::class, 'login']);
 
     Route::middleware('auth:admin')->group(function () {
-        Route::post('logout', [AdminController::class, 'logout']);
-        Route::get('me', [AdminController::class, 'me']);
+       Route::get('/reportedAnnonces', [AdminController::class, 'getReportedAnnonces']);
+        
+        Route::post('/validateAnnonce/{annonceId}', [AdminController::class, 'validateAnnonce']);
+        //Pas encore testé 
+        Route::delete('/deleteReportedAnnonce/{annonceId}', [AdminController::class, 'deleteReportedAnnonce']);
+        Route::post('/warnUser/{userId}', [AdminController::class, 'warnUser']);
         // Routes spécifiques avant les routes génériques
         Route::get('expert-requests', [AdminController::class, 'listPendingExpertRequests']);
         Route::post('expert-request/{requestId}/accept', [AdminController::class, 'acceptExpertRequest']);
@@ -45,11 +49,9 @@ Route::prefix('admin')->group(function () {
         Route::get('/', [AdminController::class, 'index']);
         Route::get('{id}', [AdminController::class, 'show']);
         Route::delete('{id}', [AdminController::class, 'destroy']);
-        Route::get('/reportedAnnonces', [AdminController::class, 'getReportedAnnonces']);
-        //Pas encore testé 
-        Route::post('/validateAnnonce/{annonceId}', [AdminController::class, 'validateAnnonce']);
-        Route::delete('/deleteReportedAnnonce/{annonceId}', [AdminController::class, 'deleteReportedAnnonce']);
-        Route::post('/warnUser', [AdminController::class, 'warnUser']);
+        
+         Route::post('logout', [AdminController::class, 'logout']);
+        Route::get('me', [AdminController::class, 'me']);
     });
 });
 

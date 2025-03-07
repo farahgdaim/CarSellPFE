@@ -7,6 +7,7 @@ use App\Models\Utilisateur;
 use App\Models\Admin;
 use App\Models\Annonce;
 use App\Models\Expert; 
+use App\Http\Controllers\NotificationController;
 
 use Illuminate\Support\Facades\Hash;
 
@@ -131,7 +132,7 @@ class AdminController extends Controller
         }
         $annonce->reported_by = [];
         $annonce->is_reported = false;
-        $annonce->supervise_par = auth()->_id;  
+        $annonce->supervise_par = auth()->id();  
         $annonce->save();
         return response()->json([
             'status' => 200,
@@ -159,29 +160,46 @@ class AdminController extends Controller
     public function warnUser($userId)
     {
         $user = Utilisateur::find($userId);
-        if(!$user){
+    
+        // Vérifier si l'utilisateur existe
+        if (!$user) {
             return response()->json([
-                'status'=>404,
-                'data' => 'utilisateur introuvable'
+                'status' => 404,
+                'data' => 'Utilisateur introuvable'
             ]);
+        }
+    
+        // Incrémenter le nombre d'avertissements
         $currentWarnings = $user->warnings_count ?? 0;
         $user->warnings_count = $currentWarnings + 1;
         $user->save();
-        $user->addNotification("Votre annonce a été signalée trop souvent. Vous avez maintenant ". $user->warnings_count. " signalement(s).");
-        }
-        if($user->warnings_count >=3){
+    
+        // Si l'utilisateur atteint 3 avertissements, on supprime son compte
+        if ($user->warnings_count >= 3) {
             $user->delete();
             return response()->json([
-                'status'=>403,
-                'data' => 'Utilisateur supprimé (3 signalements détectés)'
+                'status' => 403,
+                'data' => 'Utilisateur supprimé (3 avertissements détectés)'
             ]);
         }
-        return response()->json([
-            'status'=>200,
-            'data' => 'Utilisateur averti (warning #' . $user->warnings_count . ')'
+    
+        
+        $annonce = Annonce::where('user_id', $user->id)->latest()->first();
+        $titreAnnonce = $annonce ? $annonce->title : "une annonce";
+    
+        // Création de la requête pour NotificationController
+        $notificationController = new NotificationController();
+        $request = new Request();
+        $request->merge([
+            'user_id' => $user->id,
+            'contenu' => "Votre annonce '$titreAnnonce' a été signalée trop souvent. Vous avez maintenant " .
+                          $user->warnings_count . " avertissement(s).",
+            'statut' => 'non-lu', 
         ]);
+    
+        // Appeler la méthode store du NotificationController
+        return $notificationController->store($request);
     }
-
 
     /**
      * (ADMIN) Liste toutes les demandes d'expertise en attente.

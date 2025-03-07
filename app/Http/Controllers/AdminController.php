@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Utilisateur;
 use App\Models\Admin;
 use App\Models\Annonce;
-use App\Models\Utilisateur;
+use App\Models\Expert; 
+
 use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
@@ -16,16 +18,16 @@ class AdminController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nom' => 'required|string',
-            'prenom' => 'required|string',
-            'email' => 'required|email|unique:admins,email',
+            'nom'      => 'required|string',
+            'prenom'   => 'required|string',
+            'email'    => 'required|email|unique:admins,email',
             'password' => 'required|string|min:6',
         ]);
 
         $admin = Admin::create([
-            'nom' => $request->nom,
-            'prenom' => $request->prenom,
-            'email' => $request->email,
+            'nom'      => $request->nom,
+            'prenom'   => $request->prenom,
+            'email'    => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
@@ -72,15 +74,12 @@ class AdminController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
-        // Tente de générer un token via le guard 'admin'
         if (!$token = auth('admin')->attempt($credentials)) {
             return response()->json(['error' => 'Identifiants invalides'], 401);
         }
 
         return $this->respondWithToken($token);
     }
-
-    
 
     /**
      * Retourne la structure du token.
@@ -110,6 +109,7 @@ class AdminController extends Controller
     {
         return response()->json(auth('admin')->user());
     }
+
 
     public function getReportedAnnonces()
     {
@@ -180,5 +180,83 @@ class AdminController extends Controller
             'status'=>200,
             'data' => 'Utilisateur averti (warning #' . $user->warnings_count . ')'
         ]);
+    }
+
+
+    /**
+     * (ADMIN) Liste toutes les demandes d'expertise en attente.
+     */
+    public function listPendingExpertRequests()
+    {
+        return response()->json(Expert::where('status', 'pending')->get());
+    }
+
+    /**
+     * (ADMIN) Accept an expert role request.
+     */
+    public function acceptExpertRequest(Request $request, $requestId)
+    {
+        $expertRequest = Expert::find($requestId);
+        if (!$expertRequest) {
+            return response()->json(['message' => 'Expert request not found'], 404);
+        }
+        if ($expertRequest->status !== 'pending') {
+            return response()->json(['message' => 'This request has already been processed'], 400);
+        }
+        $expertRequest->status = 'accepted';
+        $expertRequest->save();
+
+        // Notify the utilisateur
+        $utilisateur = Utilisateur::find($expertRequest->ref_id_utilisateur);
+        if ($utilisateur) {
+            $this->notifyUtilisateur($utilisateur, "Votre demande pour devenir expert a été acceptée.");
+        }
+
+        return response()->json([
+            'message'       => 'Expert request accepted',
+            'expertRequest' => $expertRequest
+        ]);
+    }
+
+    /**
+     * (ADMIN) Reject an expert role request.
+     */
+    public function rejectExpertRequest(Request $request, $requestId)
+    {
+        $expertRequest = Expert::find($requestId);
+        if (!$expertRequest) {
+            return response()->json(['message' => 'Expert request not found'], 404);
+        }
+        if ($expertRequest->status !== 'pending') {
+            return response()->json(['message' => 'This request has already been processed'], 400);
+        }
+        $expertRequest->status = 'rejected';
+        $expertRequest->save();
+
+        // Notify the utilisateur
+        $utilisateur = Utilisateur::find($expertRequest->ref_id_utilisateur);
+        if ($utilisateur) {
+            $this->notifyUtilisateur($utilisateur, "Votre demande pour devenir expert a été rejetée.");
+        }
+
+        return response()->json([
+            'message'       => 'Expert request rejected',
+            'expertRequest' => $expertRequest
+        ]);
+    }
+
+    /**
+     * Private helper method to notify a user.
+     */
+    private function notifyUtilisateur(Utilisateur $utilisateur, string $message, string $statut = 'non_lu')
+    {
+        $notification = [
+            'ref_id_user' => $utilisateur->_id,
+            'contenu'     => $message,
+            'date'        => now(),
+            'statut'      => $statut,
+        ];
+
+        $utilisateur->push('notifications', $notification);
     }
 }

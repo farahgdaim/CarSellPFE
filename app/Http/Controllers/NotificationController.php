@@ -12,7 +12,6 @@ class NotificationController extends Controller
      */
     public function index()
     {
-        // auth()->user() renvoie l'utilisateur actuellement connecté
         $utilisateur = auth()->user();
         return response()->json($utilisateur->notifications);
     }
@@ -28,10 +27,17 @@ class NotificationController extends Controller
         ]);
 
         $utilisateur = auth()->user();
-        $utilisateur->addNotification(
-            $request->contenu,
-            $request->statut
-);
+
+        
+        $notification = [
+            'ref_id_user' => $utilisateur->_id, // référence à cet utilisateur
+            'contenu'     => $request->contenu,
+            'date'        => now(),
+            'statut'      => $request->statut,
+        ];
+
+        $utilisateur->push('notifications', $notification);
+
 
         return response()->json(['message' => 'Notification ajoutée avec succès']);
     }
@@ -45,9 +51,26 @@ class NotificationController extends Controller
             'index' => 'required|integer'
         ]);
 
-        $utilisateur = auth()->user();
-        $utilisateur->markNotificationAsRead($request->index);
+        // Retrieve the index from the request
+        $index = $request->input('index');
 
-        return response()->json(['message' => 'Notification marquée comme lue']);
+        // Get the authenticated user's notifications
+        $utilisateur = auth()->user();
+        $notifications = $utilisateur->notifications ?? [];
+
+        // Check if the given index exists in the notifications array
+        if (isset($notifications[$index])) {
+            // Update the notification's status to 'lu'
+            $notifications[$index]['statut'] = 'lu';
+
+            // Save the updated notifications back to the user model
+            $utilisateur->notifications = $notifications;
+            $utilisateur->save();
+
+            return response()->json(['message' => 'Notification marquée comme lue']);
+        }
+
+        return response()->json(['message' => 'Notification not found.'], 404);
     }
+
 }

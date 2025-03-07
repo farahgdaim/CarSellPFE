@@ -3,165 +3,172 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\DemandeEvaluation;
+use App\Models\RapportExpertise;
 use App\Models\Utilisateur;
 use App\Models\Expert;
-use Illuminate\Support\Facades\Log;
 
 class ExpertController extends Controller
 {
     /**
-     * L'utilisateur connecté fait une demande pour devenir expert
-     * en fournissant son fichier PDF de certification, son domaine d'expertise et ses années d'expérience.
-     * Un document est créé dans la collection "experts".
+     * Vérifie que l'utilisateur authentifié possède un rôle d'expert accepté.
      */
-    public function requestExpertRole(Request $request)
-    {
+    protected function authorizeExpert() {
         $user = auth()->user();
-        Log::info("ExpertController: requestExpertRole called.");
-        Log::info("User authenticated: " . json_encode($user));
-
-        // Vérifier si une demande existe déjà pour cet utilisateur
-        $existingExpert = Expert::where('ref_id_utilisateur', $user->_id)->first();
-        if ($existingExpert) {
-            return response()->json(['message' => 'Une demande est déjà en cours ou vous êtes déjà expert.'], 400);
+        $expert = Expert::where('ref_id_utilisateur', $user->_id)->first();
+        if (!$expert || $expert->status !== 'accepted') {
+            return null;
         }
-
-        // Validation des données entrantes
-        $validatedData = $request->validate([
-            'certification'    => 'required|file|mimes:pdf|max:2048',
-            'domaineExpertise' => 'required|string',
-            'anneesExperience' => 'required|integer|min:0'
-        ]);
-        Log::info("Request validated: " . json_encode($validatedData));
-
-        // Récupération et stockage du fichier PDF
-        $file = $request->file('certification');
-        Log::info("Certification file received: " . $file->getClientOriginalName());
-        $path = $file->store('certifications', 'public');
-        Log::info("File stored at path: " . $path);
-
-        // Création d'un document Expert dans la collection "experts"
-        $expert = Expert::create([
-            'ref_id_utilisateur' => $user->_id,
-            'certifications'     => [$path],
-            'domaineExpertise'   => $request->input('domaineExpertise'),
-            'anneesExperience'   => $request->input('anneesExperience'),
-            'status'             => 'pending'
-        ]);
-        Log::info("Expert record created: " . json_encode($expert));
-
-        return response()->json([
-            'message' => 'Demande pour devenir expert envoyée avec succès.',
-            'expert'  => $expert
-        ]);
-    }
-
-    /**
-     * (ADMIN) Valide la demande d'expertise.
-     * Met à jour le document Expert (status = "approved") et met à jour le rôle de l'utilisateur associé.
-     * Envoie une notification à l'utilisateur.
-     */
-    public function acceptExpertRole(Request $request, $expertId)
-    {
-        $expert = Expert::find($expertId);
-        if (!$expert) {
-            return response()->json(['message' => 'Demande d\'expert non trouvée'], 404);
-        }
-        if ($expert->status !== 'pending') {
-            return response()->json(['message' => 'Cette demande n\'est plus en attente'], 400);
-        }
-
-        $admin = auth('admin')->user();
-
-        $expert->status = 'approved';
-        $expert->ref_id_admin = $admin ? $admin->_id : null;
-        $expert->save();
-
-        $user = Utilisateur::find($expert->ref_id_utilisateur);
-        if ($user) {
-            $user->role = 'expert';
-            $user->ref_id_admin = $admin ? $admin->_id : null;
-            $user->save();
-            $user->addNotification("Votre demande pour devenir expert a été approuvée.");
-        }
-
-        return response()->json([
-            'message' => 'Demande validée. Cet utilisateur est désormais un expert.',
-            'expert'  => $expert
-        ]);
-    }
-
-    /**
-     * (ADMIN) Rejette la demande d'expertise.
-     * Met à jour le document Expert (status = "rejected") et envoie une notification à l'utilisateur.
-     */
-    public function rejectExpertRole(Request $request, $expertId)
-    {
-        $expert = Expert::find($expertId);
-        if (!$expert) {
-            return response()->json(['message' => 'Demande d\'expert non trouvée'], 404);
-        }
-        if ($expert->status !== 'pending') {
-            return response()->json(['message' => 'Cette demande n\'est plus en attente'], 400);
-        }
-
-        $admin = auth('admin')->user();
-        $expert->status = 'rejected';
-        $expert->ref_id_admin = $admin ? $admin->_id : null;
-        $expert->save();
-
-        $user = Utilisateur::find($expert->ref_id_utilisateur);
-        if ($user) {
-            $user->addNotification("Votre demande pour devenir expert a été rejetée.");
-        }
-
-        return response()->json([
-            'message' => 'Demande rejetée.',
-            'expert'  => $expert
-        ]);
-    }
-
-    /**
-     * (ADMIN) Liste toutes les demandes d'expertise en attente.
-     */
-    public function listPendingExpertRequests()
-    {
-        $pendingExperts = Expert::where('status', 'pending')->get();
-        return response()->json($pendingExperts);
-    }
-
-    /**
-     * Exemple d'action réservée aux experts approuvés (ex : accepter une évaluation).
-     */
-    public function acceptEvaluation(Request $request)
-    {
-        $user = auth()->user();
-
-        // Vérifier que l'utilisateur possède un document Expert approuvé
-        $expert = Expert::where('ref_id_utilisateur', $user->_id)
-                        ->where('status', 'approved')
-                        ->first();
-        if (!$expert) {
-            return response()->json(['message' => 'Action réservée aux experts approuvés.'], 403);
-        }
-
-        $evaluationId = $request->input('evaluationId');
-        // Traitement de l'évaluation...
-        return response()->json(['message' => 'Évaluation acceptée par l’expert.']);
+        return $expert;
     }
     
     /**
-     * Optionnel : Si vous souhaitez ajouter une action pour rejeter une évaluation directement depuis cet endpoint.
+     * Private helper method to notify a given user.
      */
-    public function rejectEvaluation(Request $request)
+    private function notifyUser(Utilisateur $utilisateur, string $contenu, string $statut = 'non_lu')
+    {
+        $notification = [
+            'ref_id_user' => $utilisateur->_id,
+            'contenu'     => $contenu,
+            'date'        => now(),
+            'statut'      => $statut,
+        ];
+
+        $utilisateur->push('notifications', $notification);
+    }
+    
+    /**
+     * Pour l'expert : liste des demandes d'évaluation en attente qui lui sont adressées.
+     */
+    public function listPendingEvaluations(Request $request)
     {
         $user = auth()->user();
+        if (!$this->authorizeExpert()) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé, vous n\'êtes pas un expert.'], 403);
+        }
+        
+        $demandes = DemandeEvaluation::where('ref_id_expert', $user->_id)
+            ->where('status', 'pending')
+            ->get();
 
-        if ($user->role !== 'expert') {
-            return response()->json(['message' => 'Action réservée aux experts.'], 403);
+        return response()->json($demandes);
+    }
+
+    /**
+     * L'expert accepte une demande d'évaluation.
+     */
+    public function acceptEvaluation(Request $request, $demandeId)
+    {
+        $user = auth()->user();
+        if (!$this->authorizeExpert()) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé, vous n\'êtes pas un expert.'], 403);
+        }
+        
+        $demande = DemandeEvaluation::find($demandeId);
+        if (!$demande) {
+            return response()->json(['message' => 'Demande d’évaluation non trouvée'], 404);
+        }
+        if ($demande->status !== 'pending') {
+            return response()->json(['message' => 'Cette demande n’est plus en attente'], 400);
+        }
+        // Vérifier que la demande appartient bien à l'expert authentifié
+        if ($demande->ref_id_expert != $user->_id) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé à traiter cette demande'], 403);
+        }
+        
+        $demande->status = 'accepted';
+        $demande->save();
+
+        // Notification au demandeur
+        $demandeur = Utilisateur::find($demande->ref_id_demandeur);
+        if ($demandeur) {
+            $this->notifyUser($demandeur, "Votre demande d’évaluation a été acceptée par l’expert.");
         }
 
-        // Logique de rejet d'évaluation si nécessaire (sinon, utilisez EvaluationController pour cela)
-        return response()->json(['message' => 'Rejet de l’évaluation non implémenté ici.']);
+        return response()->json([
+            'message' => 'Demande d’évaluation acceptée.',
+            'demande' => $demande
+        ]);
+    }
+
+    /**
+     * L'expert rejette une demande d'évaluation.
+     */
+    public function rejectEvaluation(Request $request, $demandeId)
+    {
+        $user = auth()->user();
+        if (!$this->authorizeExpert()) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé, vous n\'êtes pas un expert.'], 403);
+        }
+        
+        $demande = DemandeEvaluation::find($demandeId);
+        if (!$demande) {
+            return response()->json(['message' => 'Demande d’évaluation non trouvée'], 404);
+        }
+        if ($demande->status !== 'pending') {
+            return response()->json(['message' => 'Cette demande n’est plus en attente'], 400);
+        }
+        // Vérifier que la demande appartient bien à l'expert authentifié
+        if ($demande->ref_id_expert != $user->_id) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé à traiter cette demande'], 403);
+        }
+        
+        $demande->status = 'rejected';
+        $demande->save();
+
+        // Notification au demandeur
+        $demandeur = Utilisateur::find($demande->ref_id_demandeur);
+        if ($demandeur) {
+            $this->notifyUser($demandeur, "Votre demande d’évaluation a été rejetée par l’expert.");
+        }
+
+        return response()->json([
+            'message' => 'Demande d’évaluation rejetée.',
+            'demande' => $demande
+        ]);
+    }
+
+    /**
+     * L'expert soumet son rapport pour une demande d'évaluation.
+     */
+    public function submitRapport(Request $request, $demandeId)
+    {
+        $request->validate([
+            'contenu' => 'required|string'
+        ]);
+
+        $user = auth()->user();
+        if (!$this->authorizeExpert()) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé, vous n\'êtes pas un expert.'], 403);
+        }
+        
+        $demande = DemandeEvaluation::find($demandeId);
+        if (!$demande) {
+            return response()->json(['message' => 'Demande d’évaluation non trouvée'], 404);
+        }
+        // Vérifier que la demande appartient bien à l'expert authentifié
+        if ($demande->ref_id_expert != $user->_id) {
+            return response()->json(['message' => 'Vous n\'êtes pas autorisé à traiter cette demande'], 403);
+        }
+        
+        $rapport = RapportExpertise::create([
+            'contenu'       => $request->input('contenu'),
+            'ref_id_expert' => $demande->ref_id_expert,
+            'ref_id_eval'   => $demande->_id,
+        ]);
+
+        $demande->status = 'rapport_submitted';
+        $demande->save();
+
+        // Notification au demandeur
+        $demandeur = Utilisateur::find($demande->ref_id_demandeur);
+        if ($demandeur) {
+            $this->notifyUser($demandeur, "Le rapport d’expertise est prêt. Vous pouvez le consulter.");
+        }
+
+        return response()->json([
+            'message' => 'Rapport soumis avec succès.',
+            'rapport' => $rapport
+        ]);
     }
 }

@@ -27,5 +27,9 @@ class Admin extends Model implements JWTSubject, AuthenticatableContract
     {
         return [];
     }
+    public function supervisedAnnonces()
+    {
+        return $this->hasMany(Annonce::class, 'supervise_par');
+    }
 
 }

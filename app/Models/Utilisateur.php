@@ -32,7 +32,13 @@ class Utilisateur extends Model implements JWTSubject, AuthenticatableContract
         'password'
     ];
 
+    public function paiements(){
+        return $this->embedsMany(Paiement::class);
+    }
 
+    public function notifications(){
+        return $this->embedsMany(Notification::class);
+    }
     // Exemple de méthode pour ajouter une notification avec référence à l'utilisateur
     public function addNotification(string $contenu, string $statut = 'non_lu')
     {
@@ -121,4 +127,8 @@ class Utilisateur extends Model implements JWTSubject, AuthenticatableContract
         return [];
     }
 
+
+    public function conversations (){
+        return $this->hasMany(Conversation::class,'id_conversation','_id');
+    }
 }

@@ -12,17 +12,16 @@ class Annonce extends Model
     protected $collection = 'annonces'; // Nom de la collection MongoDB
 
     protected $fillable = [
-        'Titre', 'Description', 'DatePub', 'Prix', 'status',
+        'titre', 'description', 'prix', 'status',
         'supervisée_par', 'Ref_id_user', 'vehicule', 'images','reported_by','is_reported'
     ];
-
-    // Relation avec Voiture (document imbriqué)
+        
     public function vehicule()
     {
         return $this->embedsOne(Vehicule::class);
     }
 
-    // Relation avec Images (documents imbriqués)
+    
     public function images()
     {
         return $this->embedsMany(Image::class);
@@ -32,7 +31,7 @@ class Annonce extends Model
     }
 
     public function admin(){
-        return $this->belongsTo(Admin::class, 'Ref_id_admin','_id');
+        return $this->belongsTo(Admin::class, 'supervisée_par','_id');
     }
 
 
@@ -40,5 +39,9 @@ class Annonce extends Model
     {
         return $this->hasMany(Sponsoring::class, 'id_annonce', '_id');
 
+    }
+    public function sponsorships()
+    {
+        return $this->hasMany(Sponsorship::class, 'id_annonce');
     }
 }

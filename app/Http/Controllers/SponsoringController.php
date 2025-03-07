@@ -23,7 +23,9 @@ class SponsoringController extends Controller
                 'data' => null
             ]);
         }
-        return response()->json($sponsoring,200);
+        return response()->json([
+            'status'=>200,
+            'data'=>$sponsoring]);
     }
 
     public function create (Request $request){

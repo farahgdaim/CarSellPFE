@@ -35,7 +35,7 @@ return [
     |
     */
 
-    'guards' => [
+     'guards' => [
         'api' => [
             'driver'   => 'jwt',
             'provider' => 'users',
@@ -45,7 +45,7 @@ return [
             'provider' => 'admins',
         ],
     ],
-
+ 
     /*
     |--------------------------------------------------------------------------
     | User Providers

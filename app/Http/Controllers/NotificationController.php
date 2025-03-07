@@ -31,7 +31,7 @@ class NotificationController extends Controller
         $utilisateur->addNotification(
             $request->contenu,
             $request->statut
-        );
+);
 
         return response()->json(['message' => 'Notification ajoutée avec succès']);
     }

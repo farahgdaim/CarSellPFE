@@ -7,9 +7,7 @@ use Illuminate\Http\Request;
 
 class AnnonceController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    
     public function getAnnonce()
     {
         return response()->json([
@@ -32,21 +30,16 @@ class AnnonceController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    
     public function create(Request $request)
     {
+        $user = auth()->user();
         // Validation des données
         $data= $request->validate([
-            'Titre' => 'required|string|max:255',
-            'Description' => 'required|string',
-            'DatePub' => 'required|date',
-            'Prix' => 'required|numeric',
+            'titre' => 'required|string|max:255',
+            'description' => 'required|string',
+            'prix' => 'required|numeric',
             
-            
-            'Ref_id_user' => 'required',
-
             'vehicule' => 'required|array',
             'vehicule.Categorie' => 'required|string',
             'vehicule.Marque' => 'required|string',
@@ -66,7 +59,7 @@ class AnnonceController extends Controller
             'images.*.format' => 'required|string',
             'images.*.taille' => 'required|string',
         ]);
-        //$data['Ref_id_user'] = auth()->user()->_id; // Si tu utilises le modèle Utilisateur
+            $data['Ref_id_user'] = auth()->user()->_id; 
             $data['is_reported']= false ;
             $data ['reported_by']=[];
             $annonce =Annonce::create($data);
@@ -79,14 +72,50 @@ class AnnonceController extends Controller
     }
 
     
-   public function report ($id){
-    $annonce = Annonce::find($id);
-    $userId = auth()->user()->_id;
-   }
+    public function reportAnnonce($annonceId)
+{
+    $annonce = Annonce::find($annonceId);
 
-    /**
-     * Update the specified resource in storage.
-     */
+    if (!$annonce) {
+        return response()->json([ 
+            'status' => 404,
+            'data' => 'Annonce introuvable'
+        ]);
+    }
+
+    $userId = auth()->id();
+
+    if ($annonce->Ref_id_user === $userId) {
+        return response()->json([
+            'status' => 403,
+            'data' => 'Vous ne pouvez pas signaler votre propre annonce'
+        ]);
+    }
+    
+    if (!is_array($annonce->reported_by)) {
+        $annonce->reported_by = []; 
+        $annonce->save(); 
+    }
+
+    // Vérifier si l'utilisateur a déjà signalé cette annonce
+    if (is_array($annonce->reported_by) && in_array($userId, $annonce->reported_by)) {
+        return response()->json([
+            'status' => 400,
+            'data' => 'Vous avez déjà signalé cette annonce'
+        ]);
+    }
+
+    
+    $annonce->push('reported_by', $userId, true); // `true` empêche les doublons
+
+    // 🔹 Mettre à jour `is_reported` et sauvegarder
+    $annonce->update(['is_reported' => true]);
+
+    return response()->json(['status' => 200, 'data' => 'Annonce signalée']);
+}
+
+
+    
     public function update(Request $request, $id)
     {
         $annonce =Annonce::find($id);
@@ -122,7 +151,7 @@ class AnnonceController extends Controller
             'images.*.taille' => 'string',
         ]);
 
-        // Mise à jour des champs modifiables
+        
         $annonce->update($request->all());
 
         return response()->json([
@@ -132,9 +161,7 @@ class AnnonceController extends Controller
 
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+   
     public function destroy($id)
     {
         $annonce =Annonce::find($id);

@@ -15,13 +15,18 @@ class Sponsoring extends Model
         'description',
         'prix',
         'durée',
-        'id_annonce' 
+        'Ref_id_annonce' 
     ];
 
     // Relation avec Annonce
     public function annonce()
     {
-        return $this->belongsTo(Annonce::class, 'id_annonce','_id');
+        return $this->belongsTo(Annonce::class, 'Ref_id_annonce','_id');
+    }
+
+    public function sponsorships()
+    {
+        return $this->hasMany(Sponsorship::class, 'id_sponsoring');
     }
 
 }

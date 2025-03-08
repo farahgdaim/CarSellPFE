@@ -160,20 +160,17 @@ class AdminController extends Controller
     public function warnUser($userId)
     {
         $user = Utilisateur::find($userId);
-    
-        // Vérifier si l'utilisateur existe
         if (!$user) {
             return response()->json([
                 'status' => 404,
                 'data' => 'Utilisateur introuvable'
             ]);
         }
-    
+
         // Incrémenter le nombre d'avertissements
-        $currentWarnings = $user->warnings_count ?? 0;
-        $user->warnings_count = $currentWarnings + 1;
+        $user->warnings_count = ($user->warnings_count ?? 0) + 1;
         $user->save();
-    
+
         // Si l'utilisateur atteint 3 avertissements, on supprime son compte
         if ($user->warnings_count >= 3) {
             $user->delete();
@@ -182,24 +179,24 @@ class AdminController extends Controller
                 'data' => 'Utilisateur supprimé (3 avertissements détectés)'
             ]);
         }
-    
-        
+
         $annonce = Annonce::where('user_id', $user->id)->latest()->first();
         $titreAnnonce = $annonce ? $annonce->title : "une annonce";
-    
-        // Création de la requête pour NotificationController
-        $notificationController = new NotificationController();
-        $request = new Request();
-        $request->merge([
-            'user_id' => $user->id,
-            'contenu' => "Votre annonce '$titreAnnonce' a été signalée trop souvent. Vous avez maintenant " .
-                          $user->warnings_count . " avertissement(s).",
-            'statut' => 'non-lu', 
+
+        // Préparer le message de notification
+        $message = "Votre annonce '$titreAnnonce' a été signalée trop souvent. Vous avez maintenant " . $user->warnings_count . " avertissement(s).";
+
+        // Appel de la méthode notifyUser centralisée
+        NotificationController::notifyUser($user, $message);
+
+        return response()->json([
+            'status' => 200,
+            'data' => 'Avertissement envoyé à l\'utilisateur'
         ]);
-    
-        // Appeler la méthode store du NotificationController
-        return $notificationController->store($request);
     }
+
+
+
 
     /**
      * (ADMIN) Liste toutes les demandes d'expertise en attente.
@@ -227,7 +224,8 @@ class AdminController extends Controller
         // Notify the utilisateur
         $utilisateur = Utilisateur::find($expertRequest->ref_id_utilisateur);
         if ($utilisateur) {
-            $this->notifyUtilisateur($utilisateur, "Votre demande pour devenir expert a été acceptée.");
+            $message = "Votre demande pour devenir expert a été acceptée.";
+            NotificationController::notifyUser($utilisateur, $message);
         }
 
         return response()->json([
@@ -254,7 +252,8 @@ class AdminController extends Controller
         // Notify the utilisateur
         $utilisateur = Utilisateur::find($expertRequest->ref_id_utilisateur);
         if ($utilisateur) {
-            $this->notifyUtilisateur($utilisateur, "Votre demande pour devenir expert a été rejetée.");
+            $message = "Votre demande pour devenir expert a été rejetée.";
+            NotificationController::notifyUser($utilisateur, $message);
         }
 
         return response()->json([
@@ -263,18 +262,4 @@ class AdminController extends Controller
         ]);
     }
 
-    /**
-     * Private helper method to notify a user.
-     */
-    private function notifyUtilisateur(Utilisateur $utilisateur, string $message, string $statut = 'non_lu')
-    {
-        $notification = [
-            'ref_id_user' => $utilisateur->_id,
-            'contenu'     => $message,
-            'date'        => now(),
-            'statut'      => $statut,
-        ];
-
-        $utilisateur->push('notifications', $notification);
-    }
 }

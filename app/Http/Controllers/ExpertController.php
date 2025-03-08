@@ -7,6 +7,8 @@ use App\Models\DemandeEvaluation;
 use App\Models\RapportExpertise;
 use App\Models\Utilisateur;
 use App\Models\Expert;
+use App\Http\Controllers\NotificationController;
+
 
 class ExpertController extends Controller
 {
@@ -22,20 +24,6 @@ class ExpertController extends Controller
         return $expert;
     }
     
-    /**
-     * Private helper method to notify a given user.
-     */
-    private function notifyUser(Utilisateur $utilisateur, string $contenu, string $statut = 'non_lu')
-    {
-        $notification = [
-            'ref_id_user' => $utilisateur->_id,
-            'contenu'     => $contenu,
-            'date'        => now(),
-            'statut'      => $statut,
-        ];
-
-        $utilisateur->push('notifications', $notification);
-    }
     
     /**
      * Pour l'expert : liste des demandes d'évaluation en attente qui lui sont adressées.
@@ -82,7 +70,8 @@ class ExpertController extends Controller
         // Notification au demandeur
         $demandeur = Utilisateur::find($demande->ref_id_demandeur);
         if ($demandeur) {
-            $this->notifyUser($demandeur, "Votre demande d’évaluation a été acceptée par l’expert.");
+            $message = "Votre demande d’évaluation a été acceptée par l’expert.";
+            NotificationController::notifyUser($demandeur, $message);
         }
 
         return response()->json([
@@ -119,7 +108,8 @@ class ExpertController extends Controller
         // Notification au demandeur
         $demandeur = Utilisateur::find($demande->ref_id_demandeur);
         if ($demandeur) {
-            $this->notifyUser($demandeur, "Votre demande d’évaluation a été rejetée par l’expert.");
+            $message = "Votre demande d’évaluation a été rejetée par l’expert.";
+            NotificationController::notifyUser($demandeur, $message);
         }
 
         return response()->json([
@@ -163,7 +153,8 @@ class ExpertController extends Controller
         // Notification au demandeur
         $demandeur = Utilisateur::find($demande->ref_id_demandeur);
         if ($demandeur) {
-            $this->notifyUser($demandeur, "Le rapport d’expertise est prêt. Vous pouvez le consulter.");
+            $message = "Le rapport d’expertise est prêt. Vous pouvez le consulter.";
+            NotificationController::notifyUser($demandeur, $message);
         }
 
         return response()->json([

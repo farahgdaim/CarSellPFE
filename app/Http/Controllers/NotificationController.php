@@ -72,5 +72,20 @@ class NotificationController extends Controller
 
         return response()->json(['message' => 'Notification not found.'], 404);
     }
+    
+    /**
+     * Envoie une notification à un utilisateur.
+     */
+    public static function notifyUser(Utilisateur $user, string $contenu, string $statut = 'non_lu')
+    {
+        $notification = [
+            'ref_id_user' => $user->_id,
+            'contenu'     => $contenu,
+            'date'        => now(),
+            'statut'      => $statut,
+        ];
+
+        $user->push('notifications', $notification);
+    }
 
 }

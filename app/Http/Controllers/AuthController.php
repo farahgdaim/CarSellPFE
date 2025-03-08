@@ -35,9 +35,10 @@ class AuthController extends Controller
         ]);
 
         return response()->json([
-            'message'     => 'Inscription réussie',
-            'utilisateur' => $utilisateur
-        ], 201);
+            'status' => 201,
+            'data' => $utilisateur
+        ]);
+        
     }
 
     /**
@@ -49,10 +50,18 @@ class AuthController extends Controller
 
         try {
             if (! $token = auth()->attempt($credentials)) {
-                return response()->json(['error' => 'Identifiants invalides'], 401);
+                return response()->json([
+                    'status' => 401,
+                    'data' => 'Identifiants invalides'
+                ]);
+
             }
         } catch (JWTException $e) {
-            return response()->json(['error' => 'Impossible de créer le token'], 500);
+            return response()->json([
+                'status' => 500,
+                'data' => 'Impossible de créer le token'
+            ]);
+                    
         }
 
         return $this->respondWithToken($token);
@@ -64,10 +73,13 @@ class AuthController extends Controller
     protected function respondWithToken($token)
     {
         return response()->json([
-            'access_token' => $token,
-            'token_type'   => 'bearer',
-            'expires_in'   => auth()->factory()->getTTL() * 60
-        ]);
+            'status' => 200,
+            'data' => [
+                'access_token' => $token,
+                'token_type' => 'bearer',
+                'expires_in' => auth()->factory()->getTTL() * 60
+            ]
+        ]);        
     }
     
     /**
@@ -76,7 +88,11 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         auth()->logout();
-        return response()->json(['message' => 'Déconnexion réussie']);
+        return response()->json([
+            'status' => 200,
+            'data' => 'Déconnexion réussie'
+        ]);
+
     }
 
     /**
@@ -84,6 +100,9 @@ class AuthController extends Controller
      */
     public function me()
     {
-        return response()->json(auth()->user());
+        return response()->json([
+            'status' => 200,
+            'data' => auth()->user()
+        ]);        
     }
 }

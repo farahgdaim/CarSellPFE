@@ -36,7 +36,11 @@ class ContratController extends Controller
         $utilisateur = \App\Models\Utilisateur::where('paiements', 'elemMatch', ['id_paiement' => $request->Ref_id_paiement])->first();
 
     if (!$utilisateur) {
-        return response()->json(['error' => 'Le paiement spécifié n\'existe pas.'], 404);
+        return response()->json([
+            'status' => 404,
+            'data' => 'Le paiement spécifié n\'existe pas.'
+        ]);
+
     }
     $contrat = Contrat::create($request->all());
     return response()->json([

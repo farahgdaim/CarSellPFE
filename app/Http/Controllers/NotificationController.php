@@ -13,7 +13,10 @@ class NotificationController extends Controller
     public function index()
     {
         $utilisateur = auth()->user();
-        return response()->json($utilisateur->notifications);
+        return response()->json([
+            'status' => 200,
+            'data' => $utilisateur->notifications
+        ]);
     }
 
     /**
@@ -39,7 +42,10 @@ class NotificationController extends Controller
         $utilisateur->push('notifications', $notification);
 
 
-        return response()->json(['message' => 'Notification ajoutée avec succès']);
+        return response()->json([
+            'status' => 200,
+            'data' => 'Notification ajoutée avec succès'
+        ]);
     }
 
     /**
@@ -67,10 +73,16 @@ class NotificationController extends Controller
             $utilisateur->notifications = $notifications;
             $utilisateur->save();
 
-            return response()->json(['message' => 'Notification marquée comme lue']);
+            return response()->json([
+                'status' => 200,
+                'data' => 'Notification marquée comme lue'
+            ]);
         }
 
-        return response()->json(['message' => 'Notification not found.'], 404);
+        return response()->json([
+            'status' => 404,
+            'data' => 'Notification not found.'
+        ]);
     }
     
     /**

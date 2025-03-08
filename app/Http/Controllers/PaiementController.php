@@ -14,7 +14,8 @@ class PaiementController extends Controller
     {
         $utilisateur = auth()->user();
         return response()->json([
-            'paiements' => $utilisateur->paiements
+            'status' => 200,
+            'data' => $utilisateur->paiements
         ]);
     }
 
@@ -56,15 +57,15 @@ class PaiementController extends Controller
             $utilisateur->push('paiements', $paiement);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erreur lors de l\'enregistrement du paiement',
-                'error'   => $e->getMessage()
-            ], 500);
+                'status' => 500,
+                'data' => $e->getMessage()
+            ]);
         }
 
         return response()->json([
-            'message' => 'Paiement enregistré avec succès',
-            'paiement' => $paiement
-        ], 201);
+            'status' => 201,
+            'data' => $paiement
+        ]);
     }
 
     /**
@@ -82,8 +83,9 @@ class PaiementController extends Controller
 
         if (!isset($paiements[$request->index])) {
             return response()->json([
-                'message' => 'Index de paiement invalide'
-            ], 400);
+                'status' => 400,
+                'data' => 'Index de paiement invalide'
+            ]);
         }
 
         $paiements[$request->index]['statutPaiement'] = $request->statutPaiement;
@@ -93,14 +95,15 @@ class PaiementController extends Controller
             $utilisateur->save();
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erreur lors de la mise à jour du paiement',
-                'error'   => $e->getMessage()
-            ], 500);
+                'status' => 500,
+                'data' => $e->getMessage()
+                
+            ]);
         }
 
         return response()->json([
-            'message' => 'Statut du paiement mis à jour',
-            'paiements' => $paiements
+            'status' => 200,
+            'data' => $paiements
         ]);
     }
 }

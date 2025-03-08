@@ -16,26 +16,24 @@ class UtilisateurController extends Controller
     public function requestExpertRole(Request $request)
     {
         $user = auth()->user();
-        Log::info("UtilisateurController: requestExpertRole called.");
-        Log::info("User authenticated: " . json_encode($user));
-
+        
         // Vérifier si une demande existe déjà pour cet utilisateur
         $existingExpert = Expert::where('ref_id_utilisateur', $user->_id)->first();
         if ($existingExpert) {
-            return response()->json(['message' => 'Une demande est déjà en cours ou vous êtes déjà expert.'], 400);
-        }
+            return response()->json([
+                'status' => 400,
+                'data' => 'Une demande est déjà en cours ou vous êtes déjà expert.'
+            ]);
+                }
 
         $validatedData = $request->validate([
             'certification'    => 'required|file|mimes:pdf|max:2048',
             'domaineExpertise' => 'required|string',
             'anneesExperience' => 'required|integer|min:0'
         ]);
-        Log::info("Request validated: " . json_encode($validatedData));
 
         $file = $request->file('certification');
-        Log::info("Certification file received: " . $file->getClientOriginalName());
         $path = $file->store('certifications', 'public');
-        Log::info("File stored at path: " . $path);
 
         $expert = Expert::create([
             'ref_id_utilisateur' => $user->_id,
@@ -44,11 +42,10 @@ class UtilisateurController extends Controller
             'anneesExperience'   => $request->input('anneesExperience'),
             'status'             => 'pending'
         ]);
-        Log::info("Expert record created: " . json_encode($expert));
 
         return response()->json([
-            'message' => 'Demande pour devenir expert envoyée avec succès.',
-            'expert'  => $expert
+            'status' => 200,
+            'data' => $expert
         ]);
     }
 
@@ -72,8 +69,8 @@ class UtilisateurController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Demande d’évaluation créée avec succès.',
-            'demande' => $demande
+            'status' => 200,
+            'data' =>  $demande
         ]);
     }
 }

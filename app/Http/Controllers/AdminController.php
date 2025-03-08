@@ -32,7 +32,10 @@ class AdminController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return response()->json(['message' => 'Admin créé avec succès', 'admin' => $admin], 201);
+        return response()->json([
+            'status' => 201,
+            'data' => $admin
+        ]);
     }
 
     /**
@@ -40,7 +43,11 @@ class AdminController extends Controller
      */
     public function index()
     {
-        return response()->json(Admin::all());
+        return response()->json([
+            'status' => 200,
+            'data' => Admin::all()
+        ]);
+        
     }
 
     /**
@@ -50,9 +57,16 @@ class AdminController extends Controller
     {
         $admin = Admin::find($id);
         if (!$admin) {
-            return response()->json(['message' => 'Admin non trouvé'], 404);
+            return response()->json([
+                'status' => 404,
+                'data' => 'Admin non trouvé'
+            ]);
         }
-        return response()->json($admin);
+        return response()->json([
+            'status' => 200,
+            'data' => $admin
+        ]);
+        
     }
 
     /**
@@ -62,10 +76,17 @@ class AdminController extends Controller
     {
         $admin = Admin::find($id);
         if (!$admin) {
-            return response()->json(['message' => 'Admin non trouvé'], 404);
+            return response()->json([
+                'status' => 404,
+                'data' => 'Admin non trouvé'
+            ]);
+            
         }
         $admin->delete();
-        return response()->json(['message' => 'Admin supprimé avec succès']);
+        return response()->json([
+            'status' => 200,
+            'data' => 'Admin supprimé avec succès'
+        ]);
     }
 
     /**
@@ -76,7 +97,11 @@ class AdminController extends Controller
         $credentials = $request->only('email', 'password');
 
         if (!$token = auth('admin')->attempt($credentials)) {
-            return response()->json(['error' => 'Identifiants invalides'], 401);
+            return response()->json([
+                'status' => 401,
+                'data' => 'Identifiants invalides'
+            ]);
+            
         }
 
         return $this->respondWithToken($token);
@@ -88,10 +113,14 @@ class AdminController extends Controller
     protected function respondWithToken($token)
     {
         return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => 3600
+            'status' => 200,
+            'data' => [
+                'access_token' => $token,
+                'token_type' => 'bearer',
+                'expires_in' => 3600
+            ]
         ]);
+        
     }
 
     /**
@@ -100,7 +129,11 @@ class AdminController extends Controller
     public function logout(Request $request)
     {
         auth('admin')->logout();
-        return response()->json(['message' => 'Déconnexion réussie']);
+        return response()->json([
+            'status' => 200,
+            'data' => 'Déconnexion réussie'
+        ]);
+
     }
 
     /**
@@ -108,7 +141,11 @@ class AdminController extends Controller
      */
     public function me()
     {
-        return response()->json(auth('admin')->user());
+        return response()->json([
+            'status' => 200,
+            'data' => auth('admin')->user()
+        ]);
+
     }
 
 
@@ -203,7 +240,11 @@ class AdminController extends Controller
      */
     public function listPendingExpertRequests()
     {
-        return response()->json(Expert::where('status', 'pending')->get());
+        return response()->json([
+            'status' => 200,
+            'data' => Expert::where('status', 'pending')->get()
+        ]);
+
     }
 
     /**
@@ -213,11 +254,18 @@ class AdminController extends Controller
     {
         $expertRequest = Expert::find($requestId);
         if (!$expertRequest) {
-            return response()->json(['message' => 'Expert request not found'], 404);
+            return response()->json([
+                'status' => 404,
+                'data' => 'Expert request not found'
+            ]);
+
         }
         if ($expertRequest->status !== 'pending') {
-            return response()->json(['message' => 'This request has already been processed'], 400);
-        }
+            return response()->json([
+                'status' => 400,
+                'data' => 'This request has already been processed'
+            ]);
+                    }
         $expertRequest->status = 'accepted';
         $expertRequest->save();
 
@@ -229,9 +277,10 @@ class AdminController extends Controller
         }
 
         return response()->json([
-            'message'       => 'Expert request accepted',
-            'expertRequest' => $expertRequest
+            'status' => 200,
+            'data' => $expertRequest
         ]);
+        
     }
 
     /**
@@ -241,10 +290,18 @@ class AdminController extends Controller
     {
         $expertRequest = Expert::find($requestId);
         if (!$expertRequest) {
-            return response()->json(['message' => 'Expert request not found'], 404);
+            return response()->json([
+                'status' => 404,
+                'data' => 'Expert request not found'
+            ]);
+
         }
         if ($expertRequest->status !== 'pending') {
-            return response()->json(['message' => 'This request has already been processed'], 400);
+            return response()->json([
+                'status' => 400,
+                'data' => 'This request has already been processed'
+            ]);
+
         }
         $expertRequest->status = 'rejected';
         $expertRequest->save();
@@ -257,9 +314,10 @@ class AdminController extends Controller
         }
 
         return response()->json([
-            'message'       => 'Expert request rejected',
-            'expertRequest' => $expertRequest
+            'status' => 200,
+            'data' => $expertRequest
         ]);
+        
     }
 
 }

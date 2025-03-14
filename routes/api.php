@@ -73,7 +73,9 @@ Route::prefix('auth')->group(function () {
 Route::prefix('utilisateur')->middleware('auth')->group(function () {
     Route::post('expert-request', [UtilisateurController::class, 'requestExpertRole']);
     Route::post('evaluation-request', [UtilisateurController::class, 'requestEvaluation']);
-    //annonces
+    Route::put('profile', [UtilisateurController::class, 'updateProfile']); // New route for profile update
+
+    // Annonces
     Route::get('/annonces', [AnnonceController::class, 'getAnnonce']);
     Route::post('/annonces', [AnnonceController::class, 'create']);
     Route::get('/annonces/{id}', [AnnonceController::class, 'getAnnonceById']);
@@ -81,39 +83,28 @@ Route::prefix('utilisateur')->middleware('auth')->group(function () {
     Route::put('/annonces/{id}', [AnnonceController::class, 'update']);
     Route::post('/reportAnnonce/{id}', [AnnonceController::class, 'reportAnnonce']);
 
-
-
-    //sponsoring
+    // Sponsoring
     Route::get('/sponsoring', [SponsoringController::class, 'getSponsoring']);
     Route::post('/sponsoring', [SponsoringController::class, 'create']);
     Route::get('/sponsoring/{id}', [SponsoringController::class, 'getSponsoringById']);
     Route::delete('/sponsoring/{id}', [SponsoringController::class, 'destroy']);
     Route::put('/sponsoring/{id}', [SponsoringController::class, 'update']);
 
-
-
-    //Contrat
+    // Contrat
     Route::get('/contrats', [ContratController::class, 'getContrat']);
     Route::post('/contrats', [ContratController::class, 'createContrat']);
     Route::get('/contrats/{id}', [ContratController::class, 'getContratById']);
     Route::delete('/contrats/{id}', [ContratController::class, 'deleteContrat']);
     Route::put('/contrats/{id}', [ContratController::class, 'updateContrat']);
 
-
-
-
-
-
-    //Sponsorship
+    // Sponsorship
     Route::get('/sponsorships', [SponsorshipController::class, 'getSponsorship']);
     Route::post('/sponsorships', [SponsorshipController::class, 'createSponsorship']);
     Route::get('/sponsorships/{id}', [SponsorshipController::class, 'getSponsorshipById']);
     Route::delete('/sponsorships/{id}', [SponsorshipController::class, 'deleteSponsorship']);
     Route::put('/sponsorships/{id}', [SponsorshipController::class, 'updateSponsorship']);
 
-
-
-    //conversation
+    // Conversation
     Route::get('/conversations', [ConversationController::class, 'getAllConversation']);
     Route::get('/conversations/{conversationId}', [ConversationController::class, 'getConversationById']);
     Route::post('/conversations', [ConversationController::class, 'createConversation']);
@@ -122,6 +113,7 @@ Route::prefix('utilisateur')->middleware('auth')->group(function () {
     //Route::put('/conversations/{conversationId}/message/{messageId}',[ConversationController::class,'updateMessage']);
     //Route::delete('/conversations/{conversationId}/message/{messageId}',[ConversationController::class,'deleteMessage']);
 });
+
 
 /*
 |--------------------------------------------------------------------------

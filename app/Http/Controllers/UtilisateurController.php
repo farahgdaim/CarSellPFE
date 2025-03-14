@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Expert;
 use App\Models\DemandeEvaluation;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash; // For password hashing
 
 class UtilisateurController extends Controller
 {
@@ -24,7 +25,7 @@ class UtilisateurController extends Controller
                 'status' => 400,
                 'data' => 'Une demande est déjà en cours ou vous êtes déjà expert.'
             ]);
-                }
+        }
 
         $validatedData = $request->validate([
             'certification'    => 'required|file|mimes:pdf|max:2048',
@@ -71,6 +72,36 @@ class UtilisateurController extends Controller
         return response()->json([
             'status' => 200,
             'data' =>  $demande
+        ]);
+    }
+
+    /**
+     * Met à jour le profil de l'utilisateur connecté.
+     *
+     * Les champs modifiables sont : nom, prenom, email, telephone et password.
+     * Pour le mot de passe, la confirmation doit être envoyée avec le champ "password_confirmation".
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = auth()->user();
+
+        $validatedData = $request->validate([
+            'nom'       => 'sometimes|required|string',
+            'prenom'    => 'sometimes|required|string',
+            'email'     => 'sometimes|required|email|unique:utilisateurs,email,' . $user->_id . ',_id',
+            'telephone' => 'sometimes|nullable|string',
+            'password'  => 'sometimes|required|string|min:6|confirmed'
+        ]);
+
+        if (isset($validatedData['password'])) {
+            $validatedData['password'] = Hash::make($validatedData['password']);
+        }
+
+        $user->update($validatedData);
+
+        return response()->json([
+            'status' => 200,
+            'data' => $user
         ]);
     }
 }

@@ -45,7 +45,7 @@ class AnnonceController extends Controller
             'vehicule.Marque' => 'required|string',
             'vehicule.Modèle' => 'required|string',
             'vehicule.TypeCarburant' => 'required|string|in:Essence,Diesel,GPL,Electrique,Hybride',
-            'vehicule.Puissance' => 'required|numeric',
+            'vehicule.Puissance' => 'required|string',
             'vehicule.DateDeMiseEnCirculation' => 'required|date',
             'vehicule.Cylindre'=> 'required|string',
             'vehicule.Kilométrage' => 'required|numeric',

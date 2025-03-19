@@ -34,7 +34,9 @@ Route::prefix('admin')->group(function () {
     Route::post('login', [AdminController::class, 'login']);
 
     Route::middleware('auth:admin')->group(function () {
-       Route::get('/reportedAnnonces', [AdminController::class, 'getReportedAnnonces']);
+        Route::post('logout', [AdminController::class, 'logout']);
+        Route::get('me', [AdminController::class, 'me']);
+        Route::get('/reportedAnnonces', [AdminController::class, 'getReportedAnnonces']);
         
         Route::post('/validateAnnonce/{annonceId}', [AdminController::class, 'validateAnnonce']);
         //Pas encore testé 
@@ -50,8 +52,6 @@ Route::prefix('admin')->group(function () {
         Route::get('{id}', [AdminController::class, 'show']);
         Route::delete('{id}', [AdminController::class, 'destroy']);
         
-         Route::post('logout', [AdminController::class, 'logout']);
-        Route::get('me', [AdminController::class, 'me']);
     });
 });
 

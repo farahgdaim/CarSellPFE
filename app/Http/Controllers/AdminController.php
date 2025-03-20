@@ -256,16 +256,15 @@ class AdminController extends Controller
         if (!$expertRequest) {
             return response()->json([
                 'status' => 404,
-                'data' => 'Expert request not found'
+                'data'   => 'Expert request not found'
             ]);
-
         }
         if ($expertRequest->status !== 'pending') {
             return response()->json([
                 'status' => 400,
-                'data' => 'This request has already been processed'
+                'data'   => 'This request has already been processed'
             ]);
-                    }
+        }
         $expertRequest->status = 'accepted';
         $expertRequest->save();
 
@@ -278,9 +277,8 @@ class AdminController extends Controller
 
         return response()->json([
             'status' => 200,
-            'data' => $expertRequest
+            'data'   => $expertRequest
         ]);
-        
     }
 
     /**
@@ -292,32 +290,35 @@ class AdminController extends Controller
         if (!$expertRequest) {
             return response()->json([
                 'status' => 404,
-                'data' => 'Expert request not found'
+                'data'   => 'Expert request not found'
             ]);
-
         }
         if ($expertRequest->status !== 'pending') {
             return response()->json([
                 'status' => 400,
-                'data' => 'This request has already been processed'
+                'data'   => 'This request has already been processed'
             ]);
-
         }
+        
+        // Optionally update the status to 'rejected' before deletion (for logging or future reference)
         $expertRequest->status = 'rejected';
         $expertRequest->save();
 
-        // Notify the utilisateur
+        // Notify the utilisateur that the request is rejected
         $utilisateur = Utilisateur::find($expertRequest->ref_id_utilisateur);
         if ($utilisateur) {
             $message = "Votre demande pour devenir expert a été rejetée.";
             NotificationController::notifyUser($utilisateur, $message);
         }
+        
+        // Remove the expert request from the expert collection
+        $expertRequest->delete();
 
         return response()->json([
             'status' => 200,
-            'data' => $expertRequest
+            'data'   => 'Expert request rejected and removed successfully.'
         ]);
-        
     }
+
 
 }

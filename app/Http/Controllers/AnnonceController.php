@@ -55,7 +55,7 @@ class AnnonceController extends Controller
             'vehicule.etat'                => 'required|string|in:neuf,excellent,correct,endommagé',
             'vehicule.equipement'          => 'required|string',
 
-            // Validate that images is an array, and that each file is either an image or a PDF.
+            // Validate that images is an array, and that each single file is valid.
             'images'                     => 'nullable|array',
             'images.*'                   => 'file|mimes:jpeg,png,jpg,gif,pdf|max:5120', // max 5MB per file
         ]);
@@ -64,8 +64,8 @@ class AnnonceController extends Controller
         $uploadedImages = [];
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $file) {
-                // Save file in the "uploads/images" directory on the "public" disk.
-                $path = $file->store('uploads/images', 'public');
+                // Save the image file in the "image" folder on the "public" disk.
+                $path = $file->store('image', 'public');
 
                 $uploadedImages[] = [
                     'chemin' => $path,
@@ -76,7 +76,7 @@ class AnnonceController extends Controller
             }
         }
 
-        // Append additional data specific to the annonce.
+        // Append additional data.
         $data['Ref_id_user'] = $user->_id;
         $data['is_reported'] = false;
         $data['reported_by'] = [];
@@ -94,6 +94,7 @@ class AnnonceController extends Controller
             'data'   => $annonce
         ]);
     }
+
 
 
     

@@ -34,9 +34,9 @@ class UtilisateurController extends Controller
             'anneesExperience' => 'required|integer|min:0'
         ]);
 
-        // Store the uploaded certification PDF.
+        // Store the uploaded certification PDF in the "cert" folder.
         $file = $request->file('certification');
-        $path = $file->store('certifications', 'public');
+        $path = $file->store('cert', 'public');
 
         // Create the expert request.
         $expert = Expert::create([
@@ -52,6 +52,7 @@ class UtilisateurController extends Controller
             'data'   => $expert
         ]);
     }
+
 
 
     /**

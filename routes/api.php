@@ -28,7 +28,7 @@ use App\Models\Contrat;
 | Admin login/logout and management routes.
 |
 */
-
+Route::get('/annonces', [AnnonceController::class, 'getAnnonce']);
 Route::prefix('admin')->group(function () {
     Route::post('register', [AdminController::class, 'store']);
     Route::post('login', [AdminController::class, 'login']);
@@ -74,11 +74,11 @@ Route::prefix('utilisateur')->middleware('auth')->group(function () {
     Route::post('expert-request', [UtilisateurController::class, 'requestExpertRole']);
     Route::post('evaluation-request', [UtilisateurController::class, 'requestEvaluation']);
     //annonces
-    Route::get('/annonces', [AnnonceController::class, 'getAnnonce']);
+    //Route::get('/annonces', [AnnonceController::class, 'getAnnonce']);
     Route::post('/annonces', [AnnonceController::class, 'create']);
     Route::get('/annonces/{id}', [AnnonceController::class, 'getAnnonceById']);
     Route::delete('/annonces/{id}', [AnnonceController::class, 'destroy']);
-    Route::put('/annonces/{id}', [AnnonceController::class, 'update']);
+    //Route::put('/annonces/{id}', [AnnonceController::class, 'update']);
     Route::post('/reportAnnonce/{id}', [AnnonceController::class, 'reportAnnonce']);
 
 
@@ -141,7 +141,7 @@ Route::prefix('expert')->middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('notifications')->middleware('auth')->group(function () {
-    Route::get('/', [NotificationController::class, 'index']);
+    // Route::get('/', [NotificationController::class, 'index']);
     Route::post('/', [NotificationController::class, 'store']);
     Route::post('read', [NotificationController::class, 'markAsRead']);
 });
@@ -156,3 +156,6 @@ Route::prefix('paiements')->middleware('auth')->group(function () {
     Route::post('/', [PaiementController::class, 'store']);
     Route::put('status', [PaiementController::class, 'updateStatus']);
 });
+Route::get('/notifications', [NotificationController::class, 'index']);
+Route::put('/annonces/{id}', [AnnonceController::class, 'update']);
+Route::get('/annonces/search', [AnnonceController::class, 'search']);

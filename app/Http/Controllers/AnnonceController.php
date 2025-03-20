@@ -30,6 +30,48 @@ class AnnonceController extends Controller
         ]);
     }
 
+    public function search(Request $request) {
+        $query = Annonce::query();
+    
+        // Vérifier chaque critère avant d'appliquer le filtre
+        $filters = [];
+        
+        if ($request->filled('marque')) {
+            $filters['vehicule.Marque'] = $request->marque;
+        }
+        if ($request->filled('modele')) {
+            $filters['vehicule.Modèle'] = $request->modele;
+        }
+        if ($request->filled('puissance')) {
+            $filters['vehicule.Puissance'] = ['$gte' => (int) $request->puissance];
+        }
+        if ($request->filled('kilometrage')) {
+            $filters['vehicule.Kilométrage'] = ['$lte' => (int) $request->kilometrage];
+        }
+        if ($request->filled('energie')) {
+            $filters['vehicule.TypeCarburant'] = $request->energie;
+        }
+        if ($request->filled('boiteVitesse')) {
+            $filters['vehicule.boiteVitesse'] = $request->boiteVitesse;
+        }
+        if ($request->filled('etat')) {
+            $filters['vehicule.etat'] = $request->etat;
+        }
+        if ($request->filled('equipements')) {
+            $filters['vehicule.equipement'] = ['$in' => $request->equipements];
+        }
+        // Appliquer les filtres
+        $annonces = Annonce::where($filters)->get();
+    
+        return response()->json([
+            'status' => 200,
+            'data' => $annonces
+        ]);
+    }
+    
+
+
+
     
     public function create(Request $request)
     {
@@ -59,6 +101,20 @@ class AnnonceController extends Controller
             'images.*.format' => 'required|string',
             'images.*.taille' => 'required|string',
         ]);
+        if ($request->hasFile('images')) {
+            $images = [];
+            foreach ($request->file('images') as $image) {
+                // Enregistrer chaque image dans le répertoire public/images
+                $path = $image->store('images', 'public'); // 'public' signifie stockage dans le dossier public/storage
+                $images[] = [
+                    'chemin' => asset('storage/' . $path), // Génère une URL publique pour l'image
+                    'format' => $image->getClientOriginalExtension(),
+                    'taille' => $image->getSize(),
+                ];
+            }
+            $data['images'] = $images;
+        }
+    
             $data['Ref_id_user'] = auth()->user()->_id; 
             $data['is_reported']= false ;
             $data ['reported_by']=[];
@@ -150,6 +206,21 @@ class AnnonceController extends Controller
             'images.*.format' => 'string',
             'images.*.taille' => 'string',
         ]);
+        if ($request->hasFile('images')) {
+            $images = [];
+            foreach ($request->file('images') as $image) {
+                // Enregistrer chaque image dans le répertoire public/images
+                $path = $image->store('images', 'public'); // 'public' signifie stockage dans le dossier public/storage
+                $images[] = [
+                    'chemin' => asset('storage/' . $path), // Génère une URL publique pour l'image
+                    'format' => $image->getClientOriginalExtension(),
+                    'taille' => $image->getSize(),
+                ];
+            }
+            // Remplacer les anciennes images par les nouvelles (si elles existent)
+            $annonce->images = $images;
+        }
+    
 
         
         $annonce->update($request->all());

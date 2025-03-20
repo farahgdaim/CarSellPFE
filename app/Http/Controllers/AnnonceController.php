@@ -34,42 +34,67 @@ class AnnonceController extends Controller
     public function create(Request $request)
     {
         $user = auth()->user();
-        // Validation des données
-        $data= $request->validate([
-            'titre' => 'required|string|max:255',
-            'description' => 'required|string',
-            'prix' => 'required|numeric',
-            
-            'vehicule' => 'required|array',
-            'vehicule.Categorie' => 'required|string',
-            'vehicule.Marque' => 'required|string',
-            'vehicule.Modèle' => 'required|string',
-            'vehicule.TypeCarburant' => 'required|string|in:Essence,Diesel,GPL,Electrique,Hybride',
-            'vehicule.Puissance' => 'required|string',
+
+        // Validate the incoming data.
+        $data = $request->validate([
+            'titre'                        => 'required|string|max:255',
+            'description'                  => 'required|string',
+            'prix'                         => 'required|numeric',
+
+            'vehicule'                     => 'required|array',
+            'vehicule.Categorie'           => 'required|string',
+            'vehicule.Marque'              => 'required|string',
+            'vehicule.Modèle'              => 'required|string',
+            'vehicule.TypeCarburant'       => 'required|string|in:Essence,Diesel,GPL,Electrique,Hybride',
+            'vehicule.Puissance'           => 'required|string',
             'vehicule.DateDeMiseEnCirculation' => 'required|date',
-            'vehicule.Cylindre'=> 'required|string',
-            'vehicule.Kilométrage' => 'required|numeric',
-            'vehicule.nbPortes'=> 'required|string',
-            'vehicule.boiteVitesse'=> 'required|string|in:automatique,manuelle',
-            'vehicule.etat'=> 'required|string|in:neuf,excellent,correct,endommagé',
-            'vehicule.equipement' => 'required|string',
-            
-            'images' => 'nullable|array',
-            'images.*.chemin' => 'required|string',
-            'images.*.format' => 'required|string',
-            'images.*.taille' => 'required|string',
+            'vehicule.Cylindre'            => 'required|string',
+            'vehicule.Kilométrage'         => 'required|numeric',
+            'vehicule.nbPortes'            => 'required|string',
+            'vehicule.boiteVitesse'        => 'required|string|in:automatique,manuelle',
+            'vehicule.etat'                => 'required|string|in:neuf,excellent,correct,endommagé',
+            'vehicule.equipement'          => 'required|string',
+
+            // Validate that images is an array, and that each file is either an image or a PDF.
+            'images'                     => 'nullable|array',
+            'images.*'                   => 'file|mimes:jpeg,png,jpg,gif,pdf|max:5120', // max 5MB per file
         ]);
-            $data['Ref_id_user'] = auth()->user()->_id; 
-            $data['is_reported']= false ;
-            $data ['reported_by']=[];
-            $annonce =Annonce::create($data);
-        
+
+        // Process images if they exist.
+        $uploadedImages = [];
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
+                // Save file in the "uploads/images" directory on the "public" disk.
+                $path = $file->store('uploads/images', 'public');
+
+                $uploadedImages[] = [
+                    'chemin' => $path,
+                    'url'    => asset('storage/' . $path),
+                    'format' => $file->getClientOriginalExtension(),
+                    'taille' => $file->getSize()
+                ];
+            }
+        }
+
+        // Append additional data specific to the annonce.
+        $data['Ref_id_user'] = $user->_id;
+        $data['is_reported'] = false;
+        $data['reported_by'] = [];
+
+        // Override images field with our stored metadata if images were uploaded.
+        if (!empty($uploadedImages)) {
+            $data['images'] = $uploadedImages;
+        }
+
+        // Create the annonce.
+        $annonce = Annonce::create($data);
 
         return response()->json([
             'status' => 201,
-            'data' => $annonce
+            'data'   => $annonce
         ]);
     }
+
 
     
     public function reportAnnonce($annonceId)

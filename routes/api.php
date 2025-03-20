@@ -28,13 +28,14 @@ use App\Models\Contrat;
 | Admin login/logout and management routes.
 |
 */
-Route::get('/annonces', [AnnonceController::class, 'getAnnonce']);
 Route::prefix('admin')->group(function () {
     Route::post('register', [AdminController::class, 'store']);
     Route::post('login', [AdminController::class, 'login']);
 
     Route::middleware('auth:admin')->group(function () {
-       Route::get('/reportedAnnonces', [AdminController::class, 'getReportedAnnonces']);
+        Route::post('logout', [AdminController::class, 'logout']);
+        Route::get('me', [AdminController::class, 'me']);
+        Route::get('/reportedAnnonces', [AdminController::class, 'getReportedAnnonces']);
         
         Route::post('/validateAnnonce/{annonceId}', [AdminController::class, 'validateAnnonce']);
         //Pas encore testé 
@@ -50,8 +51,6 @@ Route::prefix('admin')->group(function () {
         Route::get('{id}', [AdminController::class, 'show']);
         Route::delete('{id}', [AdminController::class, 'destroy']);
         
-         Route::post('logout', [AdminController::class, 'logout']);
-        Route::get('me', [AdminController::class, 'me']);
     });
 });
 
@@ -73,7 +72,9 @@ Route::prefix('auth')->group(function () {
 Route::prefix('utilisateur')->middleware('auth')->group(function () {
     Route::post('expert-request', [UtilisateurController::class, 'requestExpertRole']);
     Route::post('evaluation-request', [UtilisateurController::class, 'requestEvaluation']);
-    //annonces
+    Route::put('profile', [UtilisateurController::class, 'updateProfile']); // New route for profile update
+
+    // Annonces
     //Route::get('/annonces', [AnnonceController::class, 'getAnnonce']);
     Route::post('/annonces', [AnnonceController::class, 'create']);
     Route::get('/annonces/{id}', [AnnonceController::class, 'getAnnonceById']);
@@ -81,39 +82,28 @@ Route::prefix('utilisateur')->middleware('auth')->group(function () {
     //Route::put('/annonces/{id}', [AnnonceController::class, 'update']);
     Route::post('/reportAnnonce/{id}', [AnnonceController::class, 'reportAnnonce']);
 
-
-
-    //sponsoring
+    // Sponsoring
     Route::get('/sponsoring', [SponsoringController::class, 'getSponsoring']);
     Route::post('/sponsoring', [SponsoringController::class, 'create']);
     Route::get('/sponsoring/{id}', [SponsoringController::class, 'getSponsoringById']);
     Route::delete('/sponsoring/{id}', [SponsoringController::class, 'destroy']);
     Route::put('/sponsoring/{id}', [SponsoringController::class, 'update']);
 
-
-
-    //Contrat
+    // Contrat
     Route::get('/contrats', [ContratController::class, 'getContrat']);
     Route::post('/contrats', [ContratController::class, 'createContrat']);
     Route::get('/contrats/{id}', [ContratController::class, 'getContratById']);
     Route::delete('/contrats/{id}', [ContratController::class, 'deleteContrat']);
     Route::put('/contrats/{id}', [ContratController::class, 'updateContrat']);
 
-
-
-
-
-
-    //Sponsorship
+    // Sponsorship
     Route::get('/sponsorships', [SponsorshipController::class, 'getSponsorship']);
     Route::post('/sponsorships', [SponsorshipController::class, 'createSponsorship']);
     Route::get('/sponsorships/{id}', [SponsorshipController::class, 'getSponsorshipById']);
     Route::delete('/sponsorships/{id}', [SponsorshipController::class, 'deleteSponsorship']);
     Route::put('/sponsorships/{id}', [SponsorshipController::class, 'updateSponsorship']);
 
-
-
-    //conversation
+    // Conversation
     Route::get('/conversations', [ConversationController::class, 'getAllConversation']);
     Route::get('/conversations/{conversationId}', [ConversationController::class, 'getConversationById']);
     Route::post('/conversations', [ConversationController::class, 'createConversation']);
@@ -122,6 +112,7 @@ Route::prefix('utilisateur')->middleware('auth')->group(function () {
     //Route::put('/conversations/{conversationId}/message/{messageId}',[ConversationController::class,'updateMessage']);
     //Route::delete('/conversations/{conversationId}/message/{messageId}',[ConversationController::class,'deleteMessage']);
 });
+
 
 /*
 |--------------------------------------------------------------------------
@@ -141,7 +132,7 @@ Route::prefix('expert')->middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('notifications')->middleware('auth')->group(function () {
-    // Route::get('/', [NotificationController::class, 'index']);
+    Route::get('/', [NotificationController::class, 'index']);
     Route::post('/', [NotificationController::class, 'store']);
     Route::post('read', [NotificationController::class, 'markAsRead']);
 });
@@ -156,6 +147,7 @@ Route::prefix('paiements')->middleware('auth')->group(function () {
     Route::post('/', [PaiementController::class, 'store']);
     Route::put('status', [PaiementController::class, 'updateStatus']);
 });
-Route::get('/notifications', [NotificationController::class, 'index']);
+
 Route::put('/annonces/{id}', [AnnonceController::class, 'update']);
 Route::get('/annonces/search', [AnnonceController::class, 'search']);
+Route::get('/annonces', [AnnonceController::class, 'getAnnonce']);

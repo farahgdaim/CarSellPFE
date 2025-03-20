@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Expert;
 use App\Models\DemandeEvaluation;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash; // For password hashing
 
 class UtilisateurController extends Controller
 {
@@ -16,38 +17,43 @@ class UtilisateurController extends Controller
     public function requestExpertRole(Request $request)
     {
         $user = auth()->user();
-        
-        // Vérifier si une demande existe déjà pour cet utilisateur
+
+        // Check if an expert request already exists for this user.
         $existingExpert = Expert::where('ref_id_utilisateur', $user->_id)->first();
         if ($existingExpert) {
             return response()->json([
                 'status' => 400,
-                'data' => 'Une demande est déjà en cours ou vous êtes déjà expert.'
+                'data'   => 'Une demande est déjà en cours ou vous êtes déjà expert.'
             ]);
-                }
+        }
 
+        // Validate the incoming request.
         $validatedData = $request->validate([
-            'certification'    => 'required|file|mimes:pdf|max:2048',
+            'certification'    => 'required|file|mimes:pdf|max:2048', // max 2MB for certification
             'domaineExpertise' => 'required|string',
             'anneesExperience' => 'required|integer|min:0'
         ]);
 
+        // Store the uploaded certification PDF in the "cert" folder.
         $file = $request->file('certification');
-        $path = $file->store('certifications', 'public');
+        $path = $file->store('cert', 'public');
 
+        // Create the expert request.
         $expert = Expert::create([
             'ref_id_utilisateur' => $user->_id,
             'certifications'     => [$path],
-            'domaineExpertise'   => $request->input('domaineExpertise'),
-            'anneesExperience'   => $request->input('anneesExperience'),
+            'domaineExpertise'   => $validatedData['domaineExpertise'],
+            'anneesExperience'   => $validatedData['anneesExperience'],
             'status'             => 'pending'
         ]);
 
         return response()->json([
-            'status' => 200,
-            'data' => $expert
+            'status' => 201,
+            'data'   => $expert
         ]);
     }
+
+
 
     /**
      * Créer une demande d'évaluation.
@@ -71,6 +77,36 @@ class UtilisateurController extends Controller
         return response()->json([
             'status' => 200,
             'data' =>  $demande
+        ]);
+    }
+
+    /**
+     * Met à jour le profil de l'utilisateur connecté.
+     *
+     * Les champs modifiables sont : nom, prenom, email, telephone et password.
+     * Pour le mot de passe, la confirmation doit être envoyée avec le champ "password_confirmation".
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = auth()->user();
+
+        $validatedData = $request->validate([
+            'nom'       => 'sometimes|required|string',
+            'prenom'    => 'sometimes|required|string',
+            'email'     => 'sometimes|required|email|unique:utilisateurs,email,' . $user->_id . ',_id',
+            'telephone' => 'sometimes|nullable|string',
+            'password'  => 'sometimes|required|string|min:6|confirmed'
+        ]);
+
+        if (isset($validatedData['password'])) {
+            $validatedData['password'] = Hash::make($validatedData['password']);
+        }
+
+        $user->update($validatedData);
+
+        return response()->json([
+            'status' => 200,
+            'data' => $user
         ]);
     }
 }

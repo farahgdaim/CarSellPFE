@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Models\Conversation;
+use App\Models\Utilisateur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use MongoDB\BSON\ObjectId;
@@ -15,89 +16,127 @@ class ConversationController extends Controller
         ]);
     }
 
-    public function  getConversationById($id){
-        $conversation = Conversation::find($id);
-        if(!$conversation){
+    public function getConversationById($userId1, $userId2)
+    {
+        $conversation = Conversation::where(function ($query) use ($userId1, $userId2) {
+            $query->where('Ref_id_user1', $userId1)
+                ->where('Ref_id_user2', $userId2);
+        })->orWhere(function ($query) use ($userId1, $userId2) {
+            $query->where('Ref_id_user1', $userId2)
+                ->where('Ref_id_user2', $userId1);
+        })->first();
+
+        if (!$conversation) {
             return response()->json([
-               'status' => 404,
+                'status' => 404,
                 'data' => 'Conversation not found'
             ]);
         }
+
         return response()->json([
             'status' => 200,
             'data' => $conversation
         ]);
     }
-    public function createConversation(Request $request){
-        $validatedData =$request ->validate([
-            'contenu'=> 'required|string',
-            'messages'=>'required|array',
-            'messages.*.contenu'=>'required|string',
-            
-        ]);
-        $validatedData['Ref_id_user'] = auth()->user()->_id; 
-        
-        $conversation = Conversation::create([
-            'contenu'      => $validatedData['contenu'],
-            'Ref_id_user'  => $validatedData['Ref_id_user'],
-        ]);
-    
-        // Pour chaque message, on l'ajoute via la relation, ce qui va automatiquement générer un _id pour chaque sous-document
-        foreach ($validatedData['messages'] as $msg) {
-            $conversation->messages()->create([
-                'contenu'   => $msg['contenu'],
-                'dateEnvoi' => \Carbon\Carbon::now(),
-            ]);
+
+    public function createConversation($userId)
+    {
+        $sender = auth()->user();
+        if (!$sender) {
+            return response()->json(['status' => 401, 'message' => 'Unauthorized']);
         }
 
-        return response()->json([
-            'status' => 201,
-            'data' => $conversation
+        $receiver = Utilisateur::find($userId);
+        if (!$receiver) {
+            return response()->json(['status' => 404, 'data' => 'User not found']);
+        }
+
+        // Check if conversation already exists
+        $conversation = Conversation::where(function ($query) use ($sender, $receiver) {
+            $query->where('Ref_id_user1', $sender->_id)
+                ->where('Ref_id_user2', $receiver->_id);
+        })->orWhere(function ($query) use ($sender, $receiver) {
+            $query->where('Ref_id_user1', $receiver->_id)
+                ->where('Ref_id_user2', $sender->_id);
+        })->first();
+
+        if ($conversation) {
+            return response()->json(['status' => 200, 'data' => $conversation]);
+        }
+
+        // Create new conversation
+        $newConversation = Conversation::create([
+            'Ref_id_user1' => $sender->_id,
+            'Ref_id_user2' => $receiver->_id,
+            'messages'     => [],
         ]);
 
+        return response()->json(['status' => 201, 'data' => $newConversation]);
     }
 
-    public function deleteConversation($id){
-        $conversation = Conversation::find($id);
-        if(!$conversation){
+    public function deleteConversation($userId1, $userId2)
+    {
+        $conversation = Conversation::where(function ($query) use ($userId1, $userId2) {
+            $query->where('Ref_id_user1', $userId1)
+                ->where('Ref_id_user2', $userId2);
+        })->orWhere(function ($query) use ($userId1, $userId2) {
+            $query->where('Ref_id_user1', $userId2)
+                ->where('Ref_id_user2', $userId1);
+        })->first();
+
+        if (!$conversation) {
             return response()->json([
-               'status' => 404,
+                'status' => 404,
                 'data' => 'Conversation not found'
             ]);
         }
+
         $conversation->delete();
+
         return response()->json([
             'status' => 200,
-            'data' => 'conversation deleted successfully'
+            'data' => 'Conversation deleted successfully'
         ]);
     }
 
-    public function addMessage(Request $request,$id){
-        $conversation = Conversation::find($id);
-        if(!$conversation){
+    public function addMessage(Request $request, $userId1, $userId2)
+    {
+        $conversation = Conversation::where(function ($query) use ($userId1, $userId2) {
+            $query->where('Ref_id_user1', $userId1)
+                ->where('Ref_id_user2', $userId2);
+        })->orWhere(function ($query) use ($userId1, $userId2) {
+            $query->where('Ref_id_user1', $userId2)
+                ->where('Ref_id_user2', $userId1);
+        })->first();
+
+        if (!$conversation) {
             return response()->json([
-               'status' => 404,
+                'status' => 404,
                 'data' => 'Conversation not found'
             ]);
         }
-        $data= $request ->validate([
-            'contenu'=> 'required|string',
+
+        $data = $request->validate([
+            'contenu' => 'required|string',
         ]);
-        $message = [ 
-            'contenu' => $data['contenu'],
-            'dateEnvoi' => Carbon::now(), 
+
+        $message = [
+            'contenu'   => $data['contenu'],
+            'dateEnvoi' => Carbon::now()
         ];
 
-        $conversation->messages()->create([
-            'contenu'   => $data['contenu'],
-            'dateEnvoi' => Carbon::now(),
-        ]);
-    
+        // Ensure $conversation->messages is treated as an array
+        $existingMessages = $conversation->messages ? $conversation->messages->toArray() : [];
+        $conversation->messages = array_merge($existingMessages, [$message]);
+        $conversation->save();
+
         return response()->json([
             'status' => 201,
             'data' => $message
         ]);
     }
+
+
 
     /* public function updateMessage(Request $request, $conversationId, $messageId)
 {

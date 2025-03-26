@@ -9,10 +9,16 @@ use MongoDB\BSON\ObjectId;
 
 class ConversationController extends Controller
 {
-    public function getAllConversation(){
+    public function getAllConversation()
+    {
+        $authenticatedUserId = auth()->id();
+        $conversations = Conversation::where('Ref_id_user1', $authenticatedUserId)
+            ->orWhere('Ref_id_user2', $authenticatedUserId)
+            ->get();
+
         return response()->json([
             'status' => 200,
-            'data' => Conversation::all()
+            'data' => $conversations
         ]);
     }
 
@@ -33,11 +39,22 @@ class ConversationController extends Controller
             ]);
         }
 
+        // Ensure the authenticated user is a participant:
+        $currentUser = auth()->user();
+        if ($currentUser->_id != $conversation->Ref_id_user1 &&
+            $currentUser->_id != $conversation->Ref_id_user2) {
+            return response()->json([
+                'status' => 403,
+                'data' => 'Access denied'
+            ]);
+        }
+
         return response()->json([
             'status' => 200,
             'data' => $conversation
         ]);
     }
+
 
     public function createConversation($userId)
     {
@@ -116,16 +133,24 @@ class ConversationController extends Controller
             ]);
         }
 
+        // Validate input
         $data = $request->validate([
             'contenu' => 'required|string',
         ]);
 
+        // Get the current user as sender
+        $sender = auth()->user();
+        if (!$sender) {
+            return response()->json(['status' => 401, 'message' => 'Unauthorized']);
+        }
+
         $message = [
             'contenu'   => $data['contenu'],
-            'dateEnvoi' => Carbon::now()
+            'dateEnvoi' => Carbon::now(),
+            'senderId'  => $sender->_id, // Add the sender ID
         ];
 
-        // Ensure $conversation->messages is treated as an array
+        // Merge with existing messages
         $existingMessages = $conversation->messages ? $conversation->messages->toArray() : [];
         $conversation->messages = array_merge($existingMessages, [$message]);
         $conversation->save();
@@ -135,6 +160,7 @@ class ConversationController extends Controller
             'data' => $message
         ]);
     }
+
 
 
 

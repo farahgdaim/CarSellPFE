@@ -12,22 +12,21 @@ const io = new Server(server, {
       credentials: true                // If using cookies/auth
     }
   });
-// WebSocket connection event
+// On your socket server (example using Node.js + socket.io)
 io.on('connection', (socket) => {
-  console.log('A user connected.');
+  console.log('New socket connected');
 
-  // Handle incoming messages
-  socket.on('sendMessage', (message) => {
-    console.log('Message received:', message); // Check the message content
-    io.emit('newMessage', message); // Broadcast the message
+  socket.on('joinConversation', (conversationId) => {
+    socket.join(conversationId);
+    console.log(`Socket joined room: ${conversationId}`);
   });
 
-  // Handle disconnections
-  socket.on('disconnect', () => {
-    console.log('A user disconnected.');
+  socket.on('sendMessage', (messageData) => {
+    const room = messageData.conversationId;
+    socket.to(room).emit('newMessage', messageData);
+    socket.emit('newMessage', messageData);
   });
 });
-
 
 
 // Start the server

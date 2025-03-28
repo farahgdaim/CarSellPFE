@@ -23,6 +23,13 @@ class ExpertController extends Controller
         }
         return $expert;
     }
+    public function getAllExperts() {
+        $experts = Expert::where('status', 'accepted')->get();
+        return response()->json([
+            'status' => 200,
+            'data' => $experts
+        ]);
+    }
     
     
     /**

@@ -113,6 +113,9 @@ Route::prefix('utilisateur')->middleware('auth')->group(function () {
     Route::get('/sponsorships/{id}', [SponsorshipController::class, 'getSponsorshipById']);
     Route::delete('/sponsorships/{id}', [SponsorshipController::class, 'deleteSponsorship']);
     Route::put('/sponsorships/{id}', [SponsorshipController::class, 'updateSponsorship']);
+    
+    Route::get('/experts', [ExpertController::class, 'getAllExperts']);
+
 });
 
 

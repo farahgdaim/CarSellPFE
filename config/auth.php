@@ -66,7 +66,6 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            // Utilisez votre modèle Utilisateur qui est configuré pour MongoDB
             'model'  => App\Models\Utilisateur::class,
         ],
         'admins' => [

@@ -32,7 +32,7 @@ class AnnonceController extends Controller
 
     public function search(Request $request) {
         $query = Annonce::query();
-    
+   
         // Vérifier chaque critère avant d'appliquer le filtre
         $filters = [];
         
@@ -59,7 +59,7 @@ class AnnonceController extends Controller
         }
         if ($request->filled('equipements')) {
             $filters['vehicule.equipement'] = ['$in' => $request->equipements];
-        }
+        } 
         // Appliquer les filtres
         $annonces = Annonce::where($filters)->get();
     

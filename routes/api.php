@@ -73,6 +73,17 @@ Route::prefix('utilisateur')->middleware('auth')->group(function () {
     Route::post('expert-request', [UtilisateurController::class, 'requestExpertRole']);
     Route::post('evaluation-request', [UtilisateurController::class, 'requestEvaluation']);
     Route::put('profile', [UtilisateurController::class, 'updateProfile']); // New route for profile update
+    Route::get('/users', [UtilisateurController::class, 'getAllUsers']);
+    Route::get('/users/{id}', [UtilisateurController::class, 'getUserById']);
+    
+    // Conversation
+    Route::get('/conversations', [ConversationController::class, 'getAllConversation']); // Fetch all conversations
+    Route::post('/conversations/{receiverId}', [ConversationController::class, 'createConversation']); // Create or fetch a conversation between logged-in user and another user
+    Route::get('/conversations/{userId1}/{userId2}', [ConversationController::class, 'getConversationById']); // Get a conversation between two users
+    Route::delete('/conversations/{userId1}/{userId2}', [ConversationController::class, 'deleteConversation']); // Delete a conversation between two users
+    Route::post('/conversations/{userId1}/{userId2}/message', [ConversationController::class, 'addMessage']); // Add a message to a conversation between two users
+    //Route::put('/conversations/{conversationId}/message/{messageId}',[ConversationController::class,'updateMessage']);
+    //Route::delete('/conversations/{conversationId}/message/{messageId}',[ConversationController::class,'deleteMessage']);
 
     // Annonces
     //Route::get('/annonces', [AnnonceController::class, 'getAnnonce']);
@@ -102,15 +113,9 @@ Route::prefix('utilisateur')->middleware('auth')->group(function () {
     Route::get('/sponsorships/{id}', [SponsorshipController::class, 'getSponsorshipById']);
     Route::delete('/sponsorships/{id}', [SponsorshipController::class, 'deleteSponsorship']);
     Route::put('/sponsorships/{id}', [SponsorshipController::class, 'updateSponsorship']);
+    
+    Route::get('/experts', [ExpertController::class, 'getAllExperts']);
 
-    // Conversation
-    Route::get('/conversations', [ConversationController::class, 'getAllConversation']);
-    Route::get('/conversations/{conversationId}', [ConversationController::class, 'getConversationById']);
-    Route::post('/conversations', [ConversationController::class, 'createConversation']);
-    Route::delete('/conversations/{conversationId}', [ConversationController::class, 'deleteConversation']);
-    Route::post('/conversations/{conversationId}/message', [ConversationController::class, 'addmessage']);
-    //Route::put('/conversations/{conversationId}/message/{messageId}',[ConversationController::class,'updateMessage']);
-    //Route::delete('/conversations/{conversationId}/message/{messageId}',[ConversationController::class,'deleteMessage']);
 });
 
 

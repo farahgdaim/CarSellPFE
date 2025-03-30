@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Expert;
+use App\Models\Utilisateur;
 use App\Models\DemandeEvaluation;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash; // For password hashing
@@ -109,4 +110,32 @@ class UtilisateurController extends Controller
             'data' => $user
         ]);
     }
+
+    public function getAllUsers(){
+        $users = Utilisateur::all();
+        return response()->json([
+            'status' => 200,
+            'data' => $users
+        ]);
+    }
+    
+    /**
+     * Retrieve user information by ID.
+     */
+    public function getUserById($id)
+    {
+        $user = Utilisateur::find($id); // Find the user by ID
+        if ($user) {
+            return response()->json([
+                'status' => 200,
+                'data' => $user
+            ]);
+        } else {
+            return response()->json([
+                'status' => 404,
+                'message' => 'User not found'
+            ]);
+        }
+    }
+
 }

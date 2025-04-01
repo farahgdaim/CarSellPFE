@@ -17,6 +17,7 @@ use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\ContratController;
 use App\http\Controllers\ConversationController;
 use App\Http\Controllers\SponsorshipController;
+use App\Models\Annonce;
 use App\Models\Contrat;
 
 
@@ -86,7 +87,7 @@ Route::prefix('utilisateur')->middleware('auth')->group(function () {
     //Route::delete('/conversations/{conversationId}/message/{messageId}',[ConversationController::class,'deleteMessage']);
 
     // Annonces
-    //Route::get('/annonces', [AnnonceController::class, 'getAnnonce']);
+    Route::get('/Mesannonces', [AnnonceController::class, 'mesAnnonces']);
     Route::post('/annonces', [AnnonceController::class, 'create']);
     
     Route::delete('/annonces/{id}', [AnnonceController::class, 'destroy']);
@@ -154,5 +155,7 @@ Route::prefix('paiements')->middleware('auth')->group(function () {
 });
 Route::get('/annonces/{id}', [AnnonceController::class, 'getAnnonceById']);
 Route::put('/annonces/{id}', [AnnonceController::class, 'update']);
-Route::get('/annonces/search', [AnnonceController::class, 'search']);
+Route::get('/search', [AnnonceController::class, 'search']);
 Route::get('/annonces', [AnnonceController::class, 'getAnnonce']);
+Route::get('/marques', [AnnonceController::class, 'getMarques']);
+Route::get('/modeles', [AnnonceController::class, 'getModeles']);

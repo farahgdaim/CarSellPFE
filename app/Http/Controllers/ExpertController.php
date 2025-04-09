@@ -23,8 +23,19 @@ class ExpertController extends Controller
         }
         return $expert;
     }
-    public function getAllExperts() {
+    public function getAllExperts()
+    {
+        // Check if the user is logged in
+        if (!auth()->check()) {
+            return response()->json([
+                'status' => 401,
+                'message' => 'Unauthorized. Please log in to proceed.',
+            ], 401);
+        }
+
+        // Retrieve experts with status "accepted"
         $experts = Expert::where('status', 'accepted')->get();
+
         return response()->json([
             'status' => 200,
             'data' => $experts

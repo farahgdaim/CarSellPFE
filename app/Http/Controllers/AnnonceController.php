@@ -74,71 +74,77 @@ class AnnonceController extends Controller
 
     
     public function create(Request $request)
-    {
-        $user = auth()->user();
-
-        // Validate the incoming data.
-        $data = $request->validate([
-            'titre'                        => 'required|string|max:255',
-            'description'                  => 'required|string',
-            'prix'                         => 'required|numeric',
-
-            'vehicule'                     => 'required|array',
-            'vehicule.Categorie'           => 'required|string',
-            'vehicule.Marque'              => 'required|string',
-            'vehicule.Modèle'              => 'required|string',
-            'vehicule.TypeCarburant'       => 'required|string|in:Essence,Diesel,GPL,Electrique,Hybride',
-            'vehicule.Puissance'           => 'required|string',
-            'vehicule.DateDeMiseEnCirculation' => 'required|date',
-            'vehicule.Cylindre'            => 'required|string',
-            'vehicule.Kilométrage'         => 'required|numeric',
-            'vehicule.nbPortes'            => 'required|string',
-            'vehicule.boiteVitesse'        => 'required|string|in:automatique,manuelle',
-            'vehicule.etat'                => 'required|string|in:neuf,excellent,correct,endommagé',
-            'vehicule.equipement'          => 'required|string',
-
-            // Validate that images is an array, and that each single file is valid.
-            'images'                     => 'nullable|array',
-            'images.*'                   => 'file|mimes:jpeg,png,jpg,gif,pdf|max:5120', // max 5MB per file
-        ]);
-
-
-        // Process images if they exist.
-        $uploadedImages = [];
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $file) {
-                // Save the image file in the "image" folder on the "public" disk.
-                $path = $file->store('image', 'public');
-
-                $uploadedImages[] = [
-                    'chemin' => $path,
-                    'url'    => asset('storage/' . $path),
-                    'format' => $file->getClientOriginalExtension(),
-                    'taille' => $file->getSize()
-                ];
-            }
-        }
-
-        // Append additional data.
-        $data['Ref_id_user'] = $user->_id;
-        $data['is_reported'] = false;
-        $data['reported_by'] = [];
-
-        // Override images field with our stored metadata if images were uploaded.
-        if (!empty($uploadedImages)) {
-            $data['images'] = $uploadedImages;
-        }
-
-        // Create the annonce.
-        $annonce = Annonce::create($data);
-
-
+{
+    // Check if the user is logged in
+    if (!auth()->check()) {
         return response()->json([
-            'status' => 201,
-            'data'   => $annonce
-        ]);
+            'status' => 401,
+            'message' => 'Unauthorized. Please log in to proceed.',
+        ], 401);
     }
 
+    // Retrieve the authenticated user
+    $user = auth()->user();
+
+    // Validate the incoming data
+    $data = $request->validate([
+        'titre'                        => 'required|string|max:255',
+        'description'                  => 'required|string',
+        'prix'                         => 'required|numeric',
+
+        'vehicule'                     => 'required|array',
+        'vehicule.Categorie'           => 'required|string',
+        'vehicule.Marque'              => 'required|string',
+        'vehicule.Modèle'              => 'required|string',
+        'vehicule.TypeCarburant'       => 'required|string|in:Essence,Diesel,GPL,Electrique,Hybride',
+        'vehicule.Puissance'           => 'required|string',
+        'vehicule.DateDeMiseEnCirculation' => 'required|date',
+        'vehicule.Cylindre'            => 'required|string',
+        'vehicule.Kilométrage'         => 'required|numeric',
+        'vehicule.nbPortes'            => 'required|string',
+        'vehicule.boiteVitesse'        => 'required|string|in:automatique,manuelle',
+        'vehicule.etat'                => 'required|string|in:neuf,excellent,correct,endommagé',
+        'vehicule.equipement'          => 'required|string',
+
+        // Validate that images is an array, and that each single file is valid
+        'images'                     => 'nullable|array',
+        'images.*'                   => 'file|mimes:jpeg,png,jpg,gif,pdf|max:5120', // max 5MB per file
+    ]);
+
+    // Process images if they exist
+    $uploadedImages = [];
+    if ($request->hasFile('images')) {
+        foreach ($request->file('images') as $file) {
+            // Save the image file in the "image" folder on the "public" disk
+            $path = $file->store('image', 'public');
+
+            $uploadedImages[] = [
+                'chemin' => $path,
+                'url'    => asset('storage/' . $path),
+                'format' => $file->getClientOriginalExtension(),
+                'taille' => $file->getSize()
+            ];
+        }
+    }
+
+    // Append additional data
+    $data['Ref_id_user'] = $user->_id;
+    $data['is_reported'] = false;
+    $data['reported_by'] = [];
+
+    // Override images field with our stored metadata if images were uploaded
+    if (!empty($uploadedImages)) {
+        $data['images'] = $uploadedImages;
+    }
+
+    // Create the annonce
+    $annonce = Annonce::create($data);
+
+    return response()->json([
+        'status' => 201,
+        'data'   => $annonce
+    ]);
+}
 
 
     

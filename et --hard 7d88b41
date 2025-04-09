@@ -1,0 +1,29 @@
+[33med543b9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev[m[33m)[m HEAD@{0}: reset: moving to HEAD~1
+[33m7d88b41[m[33m ([m[1;31morigin/dev[m[33m)[m HEAD@{1}: commit (merge): search method
+[33med543b9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev[m[33m)[m HEAD@{2}: commit: search method
+[33m3b0800c[m HEAD@{3}: pull origin dev: Fast-forward
+[33m6941cb4[m HEAD@{4}: checkout: moving from dev to dev
+[33m6941cb4[m HEAD@{5}: commit: mis à jour
+[33m69111a0[m[33m ([m[1;32mfarah[m[33m)[m HEAD@{6}: checkout: moving from dev to dev
+[33m69111a0[m[33m ([m[1;32mfarah[m[33m)[m HEAD@{7}: merge farah: Fast-forward
+[33m0c3e8f6[m[33m ([m[1;31morigin/master[m[33m, [m[1;32mmaster[m[33m)[m HEAD@{8}: checkout: moving from farah to dev
+[33m69111a0[m[33m ([m[1;32mfarah[m[33m)[m HEAD@{9}: checkout: moving from dev to farah
+[33m0c3e8f6[m[33m ([m[1;31morigin/master[m[33m, [m[1;32mmaster[m[33m)[m HEAD@{10}: checkout: moving from farah to dev
+[33m69111a0[m[33m ([m[1;32mfarah[m[33m)[m HEAD@{11}: commit (merge): Résolution des conflits et merge de la branche malek
+[33mad8abfc[m HEAD@{12}: commit: commit
+[33m99ce2ca[m HEAD@{13}: checkout: moving from farah to farah
+[33m99ce2ca[m HEAD@{14}: commit (merge): Résolution des conflits et finalisation du merge de malek
+[33mce8178a[m HEAD@{15}: commit (merge): h
+[33m1994133[m HEAD@{16}: commit: des cahngements
+[33m4a22b24[m[33m ([m[1;31morigin/farah[m[33m)[m HEAD@{17}: checkout: moving from farah to farah
+[33m4a22b24[m[33m ([m[1;31morigin/farah[m[33m)[m HEAD@{18}: checkout: moving from farah to farah
+[33m4a22b24[m[33m ([m[1;31morigin/farah[m[33m)[m HEAD@{19}: commit: Collection Annonce
+[33m2a6f456[m HEAD@{20}: checkout: moving from farah to farah
+[33m2a6f456[m HEAD@{21}: reset: moving to 2a6f456
+[33m0c3e8f6[m[33m ([m[1;31morigin/master[m[33m, [m[1;32mmaster[m[33m)[m HEAD@{22}: reset: moving to HEAD~1
+[33m2a6f456[m HEAD@{23}: commit: ma premiere commit
+[33m0c3e8f6[m[33m ([m[1;31morigin/master[m[33m, [m[1;32mmaster[m[33m)[m HEAD@{24}: checkout: moving from master to farah
+[33m0c3e8f6[m[33m ([m[1;31morigin/master[m[33m, [m[1;32mmaster[m[33m)[m HEAD@{25}: checkout: moving from dev to master
+[33m0c3e8f6[m[33m ([m[1;31morigin/master[m[33m, [m[1;32mmaster[m[33m)[m HEAD@{26}: checkout: moving from farah to dev
+[33m0c3e8f6[m[33m ([m[1;31morigin/master[m[33m, [m[1;32mmaster[m[33m)[m HEAD@{27}: checkout: moving from master to farah
+[33m0c3e8f6[m[33m ([m[1;31morigin/master[m[33m, [m[1;32mmaster[m[33m)[m HEAD@{28}: commit (initial): first commit

@@ -6,7 +6,7 @@ use App\Http\Controllers\AnnonceController;
 use App\Http\Controllers\SponsoringController;
 
 
-
+use App\Http\Controllers\StatistiquesController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UtilisateurController;
 use App\Http\Controllers\NotificationController;
@@ -157,5 +157,8 @@ Route::get('/annonces/{id}', [AnnonceController::class, 'getAnnonceById']);
 Route::put('/annonces/{id}', [AnnonceController::class, 'update']);
 Route::get('/search', [AnnonceController::class, 'search']);
 Route::get('/annonces', [AnnonceController::class, 'getAnnonce']);
+Route::get('/annoncesEnAttente', [AnnonceController::class, 'getAnnonce_enAttente']);
 Route::get('/marques', [AnnonceController::class, 'getMarques']);
 Route::get('/modeles', [AnnonceController::class, 'getModeles']);
+
+Route::get('/statistiques', [StatistiquesController::class, 'getStatistiques']);

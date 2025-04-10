@@ -235,17 +235,38 @@ class AdminController extends Controller
 
 
 
-    /**
-     * (ADMIN) Liste toutes les demandes d'expertise en attente.
-     */
-    public function listPendingExpertRequests()
-    {
-        return response()->json([
-            'status' => 200,
-            'data' => Expert::where('status', 'pending')->get()
-        ]);
+   
 
-    }
+public function listPendingExpertRequests()
+{
+    $experts = Expert::where('status', 'pending')->get();
+
+    // Ajout manuel des données utilisateur
+    $expertsWithUserData = $experts->map(function ($expert) {
+        $utilisateur = Utilisateur::find($expert->ref_id_utilisateur);
+
+        return [
+            '_id'               => $expert->_id,
+            'domaineExpertise'  => $expert->domaineExpertise,
+            'anneesExperience'  => $expert->anneesExperience,
+            'status'            => $expert->status,
+            'certifications'    => $expert->certifications,
+            'ref_id_utilisateur'=> $expert->ref_id_utilisateur,
+            'utilisateur_nom'   => $utilisateur?->nom ?? '',
+            'utilisateur_prenom'=> $utilisateur?->prenom ?? '',
+            'utilisateur_tel'=>$utilisateur?->telephone ?? '',
+            'utilisateur_email' => $utilisateur?->email ?? '',
+            'created_at'        => $expert->created_at,
+            'updated_at'        => $expert->updated_at,
+        ];
+    });
+
+    return response()->json([
+        'status' => 200,
+        'data'   => $expertsWithUserData
+    ]);
+}
+
 
     /**
      * (ADMIN) Accept an expert role request.

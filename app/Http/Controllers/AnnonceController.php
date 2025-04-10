@@ -16,6 +16,16 @@ class AnnonceController extends Controller
         ]);
     }
 
+    public function getAnnonce_enAttente(){
+
+        $annonces=Annonce::where('status','en attente')->get();
+
+        return response()->json([
+            'status' => 200,
+            'data' => $annonces,
+        ]);
+    }
+
     public function getAnnonceById($id)
     {
         $annonce = Annonce::find($id);
@@ -142,6 +152,7 @@ class AnnonceController extends Controller
         // Append additional data.
         $data['Ref_id_user'] = $user->_id;
         $data['is_reported'] = false;
+        $data['status'] = 'en attente';
         $data['reported_by'] = [];
 
         // Override images field with our stored metadata if images were uploaded.
@@ -221,6 +232,7 @@ class AnnonceController extends Controller
             'DatePub' => 'date',
             'Prix' => 'numeric',
             'isSponsored' => 'boolean',
+            'status'=>'string|in:en attente,vendue',
 
             'vehicule' => 'array',
             'vehicule.Categorie' => 'string',

@@ -21,4 +21,9 @@ class Expert extends Model
     protected $attributes = [
          'status' => 'pending'
     ];
+
+    public function utilisateur()
+{
+    return $this->belongsTo(Utilisateur::class, 'ref_id_utilisateur', '_id');
+}
 }

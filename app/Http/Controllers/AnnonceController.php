@@ -104,7 +104,17 @@ class AnnonceController extends Controller
 
 
     public function create(Request $request)
+
     {
+// Check if the user is logged in
+    if (!auth()->check()) {
+
+        return response()->json([
+            'status' => 401,
+            'message' => 'Unauthorized. Please log in to proceed.',
+        ], 401);
+    }
+
         $user = auth()->user();
 
         // Validate the incoming data.
@@ -149,27 +159,28 @@ class AnnonceController extends Controller
             }
         }
 
-        // Append additional data.
-        $data['Ref_id_user'] = $user->_id;
-        $data['is_reported'] = false;
-        $data['status'] = 'en attente';
-        $data['reported_by'] = [];
-
-        // Override images field with our stored metadata if images were uploaded.
-        if (!empty($uploadedImages)) {
-            $data['images'] = $uploadedImages;
-        }
-
-        // Create the annonce.
-        $annonce = Annonce::create($data);
 
 
-        return response()->json([
-            'status' => 201,
-            'data'   => $annonce
-        ]);
+    
+    // Append additional data
+    $data['Ref_id_user'] = $user->_id;
+    $data['is_reported'] = false;
+    $data['status']='en attente';
+    $data['reported_by'] = [];
+
+    // Override images field with our stored metadata if images were uploaded
+    if (!empty($uploadedImages)) {
+        $data['images'] = $uploadedImages;
     }
 
+    // Create the annonce
+    $annonce = Annonce::create($data);
+
+    return response()->json([
+        'status' => 201,
+        'data'   => $annonce
+    ]);
+}
 
 
 

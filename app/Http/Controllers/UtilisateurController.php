@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Expert;
 use App\Models\Utilisateur;
 use App\Models\DemandeEvaluation;
+use App\Models\RapportExpertise;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash; // For password hashing
 
@@ -80,6 +81,97 @@ class UtilisateurController extends Controller
             'data' =>  $demande
         ]);
     }
+
+    public function hasAlreadyRequestedEvaluation(Request $request)
+{
+    $user = auth()->user();
+
+    $request->validate([
+        'id_annonce' => 'required|string',
+    ]);
+
+    $annonceId = $request->input('id_annonce');
+
+    $demande = DemandeEvaluation::where('ref_id_demandeur', (string) $user->_id)
+                                 ->where('ref_id_annonce', $annonceId)
+                                 ->first();
+
+    return response()->json([
+        'status' => 200,
+        'hasRequested' => $demande !== null
+    ]);
+}
+public function checkRapportStatus($annonceId)
+{
+    // Recherche de la demande d'évaluation liée à l'annonce
+    $demande = DemandeEvaluation::where('ref_id_annonce', $annonceId)->first();
+
+    if (!$demande) {
+        return response()->json([
+            'status' => 404,
+            'data' => [
+                'message' => 'Aucune demande trouvée pour cette annonce.'
+            ]
+        ]);
+    }
+
+    if ($demande->status === 'rapport_submitted') {
+        return response()->json([
+            'status' => 200,
+            'data' => [
+                'rapport_genere' => true,
+                'id_demande_evaluation' => (string) $demande->_id
+            ]
+        ]);
+    } else {
+        return response()->json([
+            'status' => 200,
+            'data' => [
+                'rapport_genere' => false
+            ]
+        ]);
+    }
+}
+public function getRapportInfo($annonceId)
+{
+    // Récupérer la demande d’évaluation associée à l’annonce
+    $demande = DemandeEvaluation::where('ref_id_annonce', $annonceId)->first();
+
+    if (!$demande) {
+        return response()->json([
+            'status' => 404,
+            'message' => 'Aucune demande trouvée pour cette annonce.'
+        ]);
+    }
+
+    // Vérifier si le rapport est soumis
+    if ($demande->status === 'rapport_submitted') {
+        // Rechercher le rapport lié à cette demande d’évaluation
+        $rapport = RapportExpertise::where('ref_id_eval', $demande->_id)->first();
+
+        if ($rapport) {
+            return response()->json([
+                'status' => 200,
+                'data' => [
+                    'rapport_genere' => true,
+                    'id_demande_evaluation' => (string) $demande->_id,
+                    'id_rapport' => (string) $rapport->_id,
+                    'id_expert'=>(string)$rapport->ref_id_expert,
+                    'contenu' => $rapport->contenu, // Optionnel : contenu du rapport
+                ]
+            ]);
+        }
+    }
+
+    // Rapport non encore généré
+    return response()->json([
+        'status' => 200,
+        'data' => [
+            'rapport_genere' => false
+        ]
+    ]);
+}
+
 
     /**
      * Met à jour le profil de l'utilisateur connecté.

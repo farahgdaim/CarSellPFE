@@ -73,10 +73,13 @@ Route::prefix('auth')->group(function () {
 Route::prefix('utilisateur')->middleware('auth')->group(function () {
     Route::post('expert-request', [UtilisateurController::class, 'requestExpertRole']);
     Route::post('evaluation-request', [UtilisateurController::class, 'requestEvaluation']);
+    Route::post('/demande-evaluation/has-requested', [UtilisateurController::class, 'hasAlreadyRequestedEvaluation']);
+
     Route::put('profile', [UtilisateurController::class, 'updateProfile']); // New route for profile update
     Route::get('/users', [UtilisateurController::class, 'getAllUsers']);
     Route::get('/users/{id}', [UtilisateurController::class, 'getUserById']);
-    
+    Route::get('/rapport-status/{id}', [UtilisateurController::class, 'checkRapportStatus']);
+    Route::get('/rapport_info/{id}', [UtilisateurController::class, 'getRapportInfo']);
     // Conversation
     Route::get('/conversations', [ConversationController::class, 'getAllConversation']); // Fetch all conversations
     Route::post('/conversations/{receiverId}', [ConversationController::class, 'createConversation']); // Create or fetch a conversation between logged-in user and another user
@@ -115,7 +118,8 @@ Route::prefix('utilisateur')->middleware('auth')->group(function () {
     Route::delete('/sponsorships/{id}', [SponsorshipController::class, 'deleteSponsorship']);
     Route::put('/sponsorships/{id}', [SponsorshipController::class, 'updateSponsorship']);
     
-    Route::get('/experts', [ExpertController::class, 'getAllExperts']);
+    Route::get('/experts', [ExpertController::class, 'getAllExperts']); 
+    Route::get('experts/{id}', [ExpertController::class, 'getExpertById']);
 
 });
 
@@ -130,6 +134,7 @@ Route::prefix('expert')->middleware('auth')->group(function () {
     Route::post('evaluation/{demandeId}/accept', [ExpertController::class, 'acceptEvaluation']);
     Route::post('evaluation/{demandeId}/reject', [ExpertController::class, 'rejectEvaluation']);
     Route::post('evaluation/{demandeId}/rapport', [ExpertController::class, 'submitRapport']);
+   
 });
 
 /*

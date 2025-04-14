@@ -15,7 +15,8 @@ class ExpertController extends Controller
     /**
      * Vérifie que l'utilisateur authentifié possède un rôle d'expert accepté.
      */
-    protected function authorizeExpert() {
+    protected function authorizeExpert()
+    {
         $user = auth()->user();
         $expert = Expert::where('ref_id_utilisateur', $user->_id)->first();
         if (!$expert || $expert->status !== 'accepted') {
@@ -41,8 +42,23 @@ class ExpertController extends Controller
             'data' => $experts
         ]);
     }
-    
-    
+    public function getExpertById($id)
+    {
+        $expert = Expert::find($id);
+        if (is_null($expert)) {
+            return response()->json([
+                'status' => 404,
+                'data' => null
+            ]);
+        }
+        return response()->json([
+            'status' => '200',
+            'data' => $expert
+        ]);
+    }
+
+
+
     /**
      * Pour l'expert : liste des demandes d'évaluation en attente qui lui sont adressées.
      */
@@ -54,19 +70,17 @@ class ExpertController extends Controller
                 'status' => 403,
                 'data' => 'Vous n\'êtes pas autorisé, vous n\'êtes pas un expert.'
             ]);
-
         }
-        
+
         $demandes = DemandeEvaluation::where('ref_id_expert', $user->_id)
             ->where('status', 'pending')
             ->get();
 
-            return response()->json([
-                'status' => 200,
-                'data' => $demandes
-            ]);
-
-        }
+        return response()->json([
+            'status' => 200,
+            'data' => $demandes
+        ]);
+    }
 
     /**
      * L'expert accepte une demande d'évaluation.
@@ -79,27 +93,29 @@ class ExpertController extends Controller
                 'status' => 403,
                 'data' => 'Vous n\'êtes pas autorisé, vous n\'êtes pas un expert.'
             ]);
-                }
-        
+        }
+
         $demande = DemandeEvaluation::find($demandeId);
         if (!$demande) {
             return response()->json([
                 'status' => 404,
                 'data' => 'Demande d’évaluation non trouvée'
             ]);
-                }
+        }
         if ($demande->status !== 'pending') {
             return response()->json([
                 'status' => 400,
                 'data' => 'Cette demande n’est plus en attente'
-            ]);        }
+            ]);
+        }
         // Vérifier que la demande appartient bien à l'expert authentifié
         if ($demande->ref_id_expert != $user->_id) {
             return response()->json([
                 'status' => 403,
                 'data' => 'Vous n\'êtes pas autorisé à traiter cette demande'
-            ]);        }
-        
+            ]);
+        }
+
         $demande->status = 'accepted';
         $demande->save();
 
@@ -128,7 +144,7 @@ class ExpertController extends Controller
                 'data' => 'Vous n\'êtes pas autorisé, vous n\'êtes pas un expert.'
             ]);
         }
-        
+
         $demande = DemandeEvaluation::find($demandeId);
         if (!$demande) {
             return response()->json([
@@ -149,7 +165,7 @@ class ExpertController extends Controller
                 'data' => 'Vous n\'êtes pas autorisé à traiter cette demande'
             ]);
         }
-        
+
         $demande->status = 'rejected';
         $demande->save();
 
@@ -182,7 +198,7 @@ class ExpertController extends Controller
                 'data' => 'Vous n\'êtes pas autorisé, vous n\'êtes pas un expert.'
             ]);
         }
-        
+
         $demande = DemandeEvaluation::find($demandeId);
         if (!$demande) {
             return response()->json([
@@ -197,7 +213,7 @@ class ExpertController extends Controller
                 'data' => 'Vous n\'êtes pas autorisé à traiter cette demande'
             ]);
         }
-        
+
         $rapport = RapportExpertise::create([
             'contenu'       => $request->input('contenu'),
             'ref_id_expert' => $demande->ref_id_expert,

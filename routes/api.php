@@ -96,6 +96,7 @@ Route::prefix('utilisateur')->middleware('auth')->group(function () {
     Route::delete('/annonces/{id}', [AnnonceController::class, 'destroy']);
     //Route::put('/annonces/{id}', [AnnonceController::class, 'update']);
     Route::post('/reportAnnonce/{id}', [AnnonceController::class, 'reportAnnonce']);
+    Route::post('/reportRapport/{id}', [UtilisateurController::class, 'reportRapportExpertsie']);
 
     // Sponsoring
     Route::get('/sponsoring', [SponsoringController::class, 'getSponsoring']);

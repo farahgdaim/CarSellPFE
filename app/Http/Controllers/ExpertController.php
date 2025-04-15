@@ -218,6 +218,8 @@ class ExpertController extends Controller
             'contenu'       => $request->input('contenu'),
             'ref_id_expert' => $demande->ref_id_expert,
             'ref_id_eval'   => $demande->_id,
+            'is_repported' => false,
+            'reported_by'=> []
         ]);
 
         $demande->status = 'rapport_submitted';

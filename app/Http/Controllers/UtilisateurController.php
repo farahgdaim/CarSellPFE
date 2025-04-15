@@ -230,6 +230,43 @@ public function getRapportInfo($annonceId)
         }
     }
 
+
+    public function reportRapportExpertsie($rapportId)
+    {
+        $rapport = RapportExpertise::find($rapportId);
+
+        if (!$rapport) {
+            return response()->json([
+                'status' => 404,
+                'data' => 'Annonce introuvable'
+            ]);
+        }
+
+        $userId = auth()->id();
+
+
+        if (!is_array($rapport->reported_by)) {
+            $rapport->reported_by = [];
+            $rapport->save();
+        }
+
+        // Vérifier si l'utilisateur a déjà signalé cette annonce
+        if (is_array($rapport->reported_by) && in_array($userId, $rapport->reported_by)) {
+            return response()->json([
+                'status' => 400,
+                'data' => 'Vous avez déjà signalé ce rapport'
+            ]);
+        } 
+
+
+        $rapport->push('reported_by', $userId, true); // `true` empêche les doublons
+
+        // 🔹 Mettre à jour `is_reported` et sauvegarder
+        $rapport->update(['is_reported' => true]);
+
+        return response()->json(['status' => 200, 'data' => 'rapport signalée']);
+    }
+
     
 
 }

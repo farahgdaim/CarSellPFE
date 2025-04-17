@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\DemandeEvaluation;
 use App\Models\RapportExpertise;
+use App\Models\Annonce;
 use App\Models\Utilisateur;
 use App\Models\Expert;
 use App\Http\Controllers\NotificationController;
@@ -12,6 +13,53 @@ use App\Http\Controllers\NotificationController;
 
 class ExpertController extends Controller
 {
+    /**
+     * Récupère les détails d'une demande d'évaluation,
+     * incluant la demande, l'annonce associée et le demandeur.
+     */
+    public function getEvaluationDetails($demandeId)
+    {
+        $demande = DemandeEvaluation::find($demandeId);
+        if (!$demande) {
+            return response()->json([
+                'status' => 404,
+                'message' => 'Demande d’évaluation introuvable.'
+            ], 404);
+        }
+
+        $annonce   = Annonce::find($demande->ref_id_annonce);
+        $demandeur = Utilisateur::find($demande->ref_id_demandeur);
+
+        return response()->json([
+            'status' => 200,
+            'data' => [
+                'demande'   => $demande,
+                'annonce'   => $annonce,
+                'demandeur' => $demandeur
+            ]
+        ]);
+    }
+    
+    /**
+     * Vérifie si l'utilisateur authentifié est un expert avec un statut accepté.
+     */
+    public function checkExpertStatus()
+    {
+        // Récupère l'utilisateur authentifié.
+        $user = auth()->user();
+
+        // Recherche un enregistrement d'expert pour cet utilisateur.
+        $expert = Expert::where('ref_id_utilisateur', $user->_id)->first();
+
+        // Vérifie que l'enregistrement existe et que le statut est "accepted".
+        if ($expert && $expert->status === 'accepted') {
+            return response()->json(['isExpert' => true], 200);
+        } else {
+            return response()->json(['isExpert' => false], 200);
+        }
+    }
+
+
     /**
      * Vérifie que l'utilisateur authentifié possède un rôle d'expert accepté.
      */

@@ -124,6 +124,11 @@ Route::prefix('utilisateur')->middleware('auth')->group(function () {
     Route::get('/experts', [ExpertController::class, 'getAllExperts']); 
     Route::get('experts/{id}', [ExpertController::class, 'getExpertById']);
 
+    // Demandeur routes
+    Route::get('mes-demandes', [UtilisateurController::class, 'listMyRequests']);
+    Route::post('demande/{demandeId}/cancel', [UtilisateurController::class, 'cancelMyRequest']);
+
+
 });
 
 
@@ -138,6 +143,8 @@ Route::prefix('expert')->middleware('auth')->group(function () {
     Route::post('evaluation/{demandeId}/reject', [ExpertController::class, 'rejectEvaluation']);
     Route::post('evaluation/{demandeId}/rapport', [ExpertController::class, 'submitRapport']);
     Route::get('evaluation/{demandeId}', [ExpertController::class, 'getEvaluationDetails']);
+    Route::get('evaluations/accepted', [ExpertController::class, 'listAcceptedEvaluations']);
+
 
 });
 

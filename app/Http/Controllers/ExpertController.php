@@ -14,6 +14,26 @@ use App\Http\Controllers\NotificationController;
 class ExpertController extends Controller
 {
     /**
+     * Liste des demandes d'évaluation acceptées (status = 'accepted').
+     */
+    public function listAcceptedEvaluations()
+    {
+        $expert = $this->authorizeExpert();
+        if (!$expert) {
+            return response()->json(['status' => 403, 'data' => 'Non autorisé'], 403);
+        }
+
+        $demandes = DemandeEvaluation::where('ref_id_expert', $expert->ref_id_utilisateur)
+            ->where('status', 'accepted')
+            ->get();
+
+        return response()->json([
+            'status' => 200,
+            'data'   => $demandes
+        ]);
+    }
+
+    /**
      * Récupère les détails d'une demande d'évaluation,
      * incluant la demande, l'annonce associée et le demandeur.
      */

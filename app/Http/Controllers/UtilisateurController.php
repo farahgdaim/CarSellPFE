@@ -7,11 +7,57 @@ use App\Models\Expert;
 use App\Models\Utilisateur;
 use App\Models\DemandeEvaluation;
 use App\Models\RapportExpertise;
+use App\Models\Annonce;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash; // For password hashing
 
 class UtilisateurController extends Controller
 {
+    /**
+     * Liste toutes les demandes d’évaluation de l’utilisateur connecté,
+     * avec l’annonce et, si existant, le rapport.
+     */
+    public function listMyRequests()
+    {
+        $user = auth()->user();
+        $demandes = DemandeEvaluation::where('ref_id_demandeur', $user->_id)->get();
+
+        $data = $demandes->map(function($demande) {
+            $annonce = Annonce::find($demande->ref_id_annonce);
+            $rapport = RapportExpertise::where('ref_id_eval', $demande->_id)->first();
+            return [
+                'demande' => $demande,
+                'annonce' => $annonce,
+                'rapport' => $rapport
+            ];
+        });
+
+        return response()->json([
+            'status' => 200,
+            'data'   => $data
+        ]);
+    }
+
+    /**
+     * Annule une demande en attente.
+     */
+    public function cancelMyRequest($demandeId)
+    {
+        $user = auth()->user();
+        $demande = DemandeEvaluation::find($demandeId);
+
+        if (!$demande || $demande->ref_id_demandeur !== $user->_id) {
+            return response()->json(['status' => 404, 'message' => 'Demande non trouvée'], 404);
+        }
+        if ($demande->status !== 'pending') {
+            return response()->json(['status' => 400, 'message' => 'Impossible d’annuler cette demande'], 400);
+        }
+
+        $demande->delete();
+
+        return response()->json(['status' => 200, 'message' => 'Demande annulée']);
+    }
+
     /**
      * L'utilisateur connecté fait une demande pour devenir expert
      * en fournissant son fichier PDF de certification, son domaine d'expertise et ses années d'expérience.

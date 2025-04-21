@@ -8,8 +8,9 @@ use App\Models\Admin;
 use App\Models\Annonce;
 use App\Models\Expert; 
 use App\Http\Controllers\NotificationController;
-
+use App\Models\RapportExpertise;
 use Illuminate\Support\Facades\Hash;
+use LDAP\Result;
 
 class AdminController extends Controller
 {
@@ -157,6 +158,41 @@ class AdminController extends Controller
             'data' => $reportedAnnonces
         ]);
     }
+    public function validateReport($reportId)
+    {
+        $rapport = RapportExpertise::find($reportId);
+        if(!$rapport){
+            return response()->json([
+                'status' => 404,
+                'data' => 'rapport introuvable'
+            ]);
+        }
+        $rapport->reported_by = [];
+       
+        $rapport->is_reported = false;
+        $rapport->supervise_par = auth()->id();  
+        $rapport->save();
+        return response()->json([
+            'status' => 200,
+            'data' => 'rapport validée (signalements retirés)'
+        ]);
+    }
+    public function deleteReportedRapport($reportId){
+        $rapport = RapportExpertise::find($reportId);
+        if(!$rapport){
+            return response()->json([
+                'status' => 404,
+                'data' => 'rapport introuvable'
+            ]);
+        }
+        $userId = $rapport->ref_id_expert;
+        $rapport->delete();
+        $this->warnUser($userId);
+        return response()->json([
+            'status' => 200,
+            'data' => 'rapport supprimée '
+        ]);
+    }
 
     public function validateAnnonce($annonceId)
     {
@@ -210,6 +246,7 @@ class AdminController extends Controller
 
         // Si l'utilisateur atteint 3 avertissements, on supprime son compte
         if ($user->warnings_count >= 3) {
+            Annonce::where('Ref_id_user', $user->id)->delete();
             $user->delete();
             return response()->json([
                 'status' => 403,
@@ -338,6 +375,29 @@ public function listPendingExpertRequests()
         return response()->json([
             'status' => 200,
             'data'   => 'Expert request rejected and removed successfully.'
+        ]);
+    }
+
+   
+    public function getReportedRapport()
+    {
+        $reportedRapport = RapportExpertise::where('is_reported', true)->get();
+        return response()->json([
+            'status' => 200,
+            'data' => $reportedRapport
+        ]);
+    }
+    public function getReportedRapportById($id){
+        $rapport = RapportExpertise::find($id);
+        if (is_null($rapport)) {
+            return response()->json([
+                'status' => 404,
+                'data' => null
+            ]);
+        }
+        return response()->json([
+            'status' => '200',
+            'data' => $rapport
         ]);
     }
 

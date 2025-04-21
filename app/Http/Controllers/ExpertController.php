@@ -219,6 +219,7 @@ class ExpertController extends Controller
             'ref_id_expert' => $demande->ref_id_expert,
             'ref_id_eval'   => $demande->_id,
             'is_repported' => false,
+            'status'=>'unpaid',
             'reported_by'=> []
         ]);
 

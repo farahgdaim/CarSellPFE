@@ -37,9 +37,12 @@ Route::prefix('admin')->group(function () {
         Route::post('logout', [AdminController::class, 'logout']);
         Route::get('me', [AdminController::class, 'me']);
         Route::get('/reportedAnnonces', [AdminController::class, 'getReportedAnnonces']);
+        Route::get('/reportedRapport', [AdminController::class, 'getReportedRapport']);
+        Route::get('/reportedRapport/{id}', [AdminController::class, 'getReportedRapportById']);
+        Route::post('/validateRapport/{rapportId}', [AdminController::class, 'validateReport']);
+        Route::delete('/deleteReportedRapport/{rapportId}', [AdminController::class, 'deleteReportedRapport']);
         
         Route::post('/validateAnnonce/{annonceId}', [AdminController::class, 'validateAnnonce']);
-        //Pas encore testé 
         Route::delete('/deleteReportedAnnonce/{annonceId}', [AdminController::class, 'deleteReportedAnnonce']);
         Route::post('/warnUser/{userId}', [AdminController::class, 'warnUser']);
         // Routes spécifiques avant les routes génériques
@@ -94,7 +97,7 @@ Route::prefix('utilisateur')->middleware('auth')->group(function () {
     Route::post('/annonces', [AnnonceController::class, 'create']);
     
     Route::delete('/annonces/{id}', [AnnonceController::class, 'destroy']);
-    //Route::put('/annonces/{id}', [AnnonceController::class, 'update']);
+    Route::put('/annonces/{id}', [AnnonceController::class, 'update']);
     Route::post('/reportAnnonce/{id}', [AnnonceController::class, 'reportAnnonce']);
     Route::post('/reportRapport/{id}', [UtilisateurController::class, 'reportRapportExpertsie']);
 
@@ -160,7 +163,7 @@ Route::prefix('paiements')->middleware('auth')->group(function () {
     Route::put('status', [PaiementController::class, 'updateStatus']);
 });
 Route::get('/annonces/{id}', [AnnonceController::class, 'getAnnonceById']);
-Route::put('/annonces/{id}', [AnnonceController::class, 'update']);
+
 Route::get('/search', [AnnonceController::class, 'search']);
 Route::get('/annonces', [AnnonceController::class, 'getAnnonce']);
 Route::get('/annoncesEnAttente', [AnnonceController::class, 'getAnnonce_enAttente']);

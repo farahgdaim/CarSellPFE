@@ -237,20 +237,21 @@ class AnnonceController extends Controller
                 'data' => null
             ]);
         }
+    
         $request->validate([
             'Titre' => 'string|max:255',
             'Description' => 'string',
             'DatePub' => 'date',
             'Prix' => 'numeric',
             'isSponsored' => 'boolean',
-            'status'=>'string|in:en attente,vendue',
-
+            'status' => 'string|in:en attente,vendue',
+    
             'vehicule' => 'array',
             'vehicule.Categorie' => 'string',
             'vehicule.Marque' => 'string',
             'vehicule.Modèle' => 'string',
             'vehicule.TypeCarburant' => 'string|in:Essence,Diesel,GPL,Electrique,Hybride',
-            'vehicule.Puissance' => 'numeric',
+            'vehicule.Puissance' => 'string',
             'vehicule.DateDeMiseEnCirculation' => 'date',
             'vehicule.Cylindre' => 'string',
             'vehicule.Kilométrage' => 'numeric',
@@ -258,35 +259,45 @@ class AnnonceController extends Controller
             'vehicule.boiteVitesse' => 'string|in:automatique,manuelle',
             'vehicule.etat' => 'string|in:neuf,excellent,correct,endommagé',
             'vehicule.equipement' => 'string',
+    
             'images' => 'nullable|array',
             'images.*.chemin' => 'string',
             'images.*.format' => 'string',
             'images.*.taille' => 'string',
         ]);
+    
+        // Champs simples
+        $annonce->fill($request->except(['vehicule', 'images']));
+    
+        // Mise à jour des champs spécifiques dans le sous-document `vehicule`
+        if ($request->has('vehicule')) {
+            foreach ($request->input('vehicule') as $key => $value) {
+                $annonce->vehicule->$key = $value;
+            }
+        }
+    
+        // Images (si besoin)
         if ($request->hasFile('images')) {
             $images = [];
             foreach ($request->file('images') as $image) {
-                // Enregistrer chaque image dans le répertoire public/images
-                $path = $image->store('images', 'public'); // 'public' signifie stockage dans le dossier public/storage
+                $path = $image->store('images', 'public');
                 $images[] = [
-                    'chemin' => asset('storage/' . $path), // Génère une URL publique pour l'image
+                    'chemin' => asset('storage/' . $path),
                     'format' => $image->getClientOriginalExtension(),
                     'taille' => $image->getSize(),
                 ];
             }
-            // Remplacer les anciennes images par les nouvelles (si elles existent)
             $annonce->images = $images;
         }
-
-
-
-        $annonce->update($request->all());
-
+    
+        $annonce->save();
+    
         return response()->json([
             'status' => 201,
             'data' => $annonce
         ]);
     }
+    
 
 
     public function destroy($id)

@@ -238,7 +238,7 @@ public function getRapportInfo($annonceId)
         if (!$rapport) {
             return response()->json([
                 'status' => 404,
-                'data' => 'Annonce introuvable'
+                'data' => 'Rapport introuvable'
             ]);
         }
 
@@ -264,7 +264,7 @@ public function getRapportInfo($annonceId)
         // 🔹 Mettre à jour `is_reported` et sauvegarder
         $rapport->update(['is_reported' => true]);
 
-        return response()->json(['status' => 200, 'data' => 'rapport signalée']);
+        return response()->json(['status' => 200, 'data' => 'rapport signalé avec succès']);
     }
 
     

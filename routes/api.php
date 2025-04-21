@@ -66,6 +66,8 @@ Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth');
     Route::get('me', [AuthController::class, 'me'])->middleware('auth');
+    Route::get('expert/check', [ExpertController::class, 'checkExpertStatus']);
+
 });
 
 /*
@@ -125,6 +127,11 @@ Route::prefix('utilisateur')->middleware('auth')->group(function () {
     Route::get('/experts', [ExpertController::class, 'getAllExperts']); 
     Route::get('experts/{id}', [ExpertController::class, 'getExpertById']);
 
+    // Demandeur routes
+    Route::get('mes-demandes', [UtilisateurController::class, 'listMyRequests']);
+    Route::post('demande/{demandeId}/cancel', [UtilisateurController::class, 'cancelMyRequest']);
+
+
 });
 
 
@@ -138,7 +145,10 @@ Route::prefix('expert')->middleware('auth')->group(function () {
     Route::post('evaluation/{demandeId}/accept', [ExpertController::class, 'acceptEvaluation']);
     Route::post('evaluation/{demandeId}/reject', [ExpertController::class, 'rejectEvaluation']);
     Route::post('evaluation/{demandeId}/rapport', [ExpertController::class, 'submitRapport']);
-   
+    Route::get('evaluation/{demandeId}', [ExpertController::class, 'getEvaluationDetails']);
+    Route::get('evaluations/accepted', [ExpertController::class, 'listAcceptedEvaluations']);
+
+
 });
 
 /*

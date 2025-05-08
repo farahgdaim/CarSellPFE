@@ -47,15 +47,15 @@ class UtilisateurController extends Controller
         $demande = DemandeEvaluation::find($demandeId);
 
         if (!$demande || $demande->ref_id_demandeur !== $user->_id) {
-            return response()->json(['status' => 404, 'message' => 'Demande non trouvée'], 404);
+            return response()->json(['status' => 404, 'data' => 'Demande non trouvée']);
         }
         if ($demande->status !== 'pending') {
-            return response()->json(['status' => 400, 'message' => 'Impossible d’annuler cette demande'], 400);
+            return response()->json(['status' => 400, 'data' => 'Impossible d’annuler cette demande']);
         }
 
         $demande->delete();
 
-        return response()->json(['status' => 200, 'message' => 'Demande annulée']);
+        return response()->json(['status' => 200, 'data' => 'Demande annulée']);
     }
 
     /**
@@ -146,6 +146,23 @@ class UtilisateurController extends Controller
         'status' => 200,
         'hasRequested' => $demande !== null
     ]);
+}
+
+public function getDemandeInfo($annonceId){
+    $demande = DemandeEvaluation::where('ref_id_annonce', $annonceId)->first();
+    if (!$demande){
+        return response()->json([
+            'status' => 404,
+            'data' => [
+                'message' => 'Aucune demande trouvée pour cette annonce.'
+                ]
+            ]);
+    }
+    return response()->json([
+        'status'=>200,
+        'data'=>$demande
+    ]);
+
 }
 public function checkRapportStatus($annonceId)
 {

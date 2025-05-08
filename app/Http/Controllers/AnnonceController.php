@@ -237,7 +237,8 @@ class AnnonceController extends Controller
                 'data' => null
             ]);
         }
-    
+        \Log::debug('Incoming payload:', $request->all());
+
         $request->validate([
             'Titre' => 'string|max:255',
             'Description' => 'string',
@@ -353,7 +354,7 @@ class AnnonceController extends Controller
         $annonces = Annonce::where('Ref_id_user', $userId)->get();
 
         return response()->json([
-            'status' => '200',
+            'status' => 200,
             'data' => $annonces
         ]);
     }

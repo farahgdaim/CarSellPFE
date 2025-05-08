@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Annonce;
 use Illuminate\Http\Request;
 
@@ -145,19 +146,59 @@ class AnnonceController extends Controller
 
         // Process images if they exist.
         $uploadedImages = [];
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $file) {
-                // Save the image file in the "image" folder on the "public" disk.
-                $path = $file->store('image', 'public');
 
+        if ($request->hasFile('images')) {
+            $flaskUrl = env('FLASK_URL', 'http://localhost:5000/flouter');
+            $multipart = [];
+    
+            foreach ($request->file('images') as $file) {
+                $multipart[] = [
+                    'name' => 'images', 
+                    'contents' => fopen($file->path(), 'r'),
+                    'filename' => $file->getClientOriginalName()
+                ];
+            }
+    
+            $response = Http::timeout(120)->attach($multipart)->post($flaskUrl);
+    
+            if ($response->failed()) {
+                return response()->json([
+                    'status' => 500,
+                    'message' => 'Échec du traitement des images: ' . $response->body()
+                ], 500);
+            }
+    
+            $responseData = $response->json();
+    
+            if (isset($responseData['error'])) {
+                return response()->json([
+                    'status' => 500,
+                    'message' => $responseData['error']
+                ], 500);
+            }
+    
+            foreach ($responseData['resultats'] as $result) {
+                $imageResponse = Http::get($result['url']);
+    
+                if (!$imageResponse->successful()) {
+                    return response()->json([
+                        'status' => 500,
+                        'message' => 'Échec du téléchargement de l\'image traitée'
+                    ], 500);
+                }
+    
+                $path = 'blurred_images/' . $result['fichier'];
+                Storage::disk('public')->put($path, $imageResponse->body());
+    
                 $uploadedImages[] = [
                     'chemin' => $path,
                     'url'    => asset('storage/' . $path),
-                    'format' => $file->getClientOriginalExtension(),
-                    'taille' => $file->getSize()
+                    'format' => pathinfo($result['fichier'], PATHINFO_EXTENSION),
+                    'taille' => Storage::disk('public')->size($path)
                 ];
             }
         }
+    
 
 
 

@@ -99,7 +99,7 @@ Route::prefix('utilisateur')->middleware('auth')->group(function () {
     Route::post('/annonces', [AnnonceController::class, 'create']);
     Route::get('/annonces/{id}', [AnnonceController::class, 'getAnnonceById']);
     Route::delete('/annonces/{id}', [AnnonceController::class, 'destroy']);
-    Route::put('/annonces/{id}', [AnnonceController::class, 'update']);
+    Route::put('/Updateannonces/{id}', [AnnonceController::class, 'update']);
     Route::post('/reportAnnonce/{id}', [AnnonceController::class, 'reportAnnonce']);
     Route::post('/reportRapport/{id}', [UtilisateurController::class, 'reportRapportExpertsie']);
 

@@ -1,10 +1,12 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Annonce;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class AnnonceController extends Controller
 {
@@ -17,9 +19,10 @@ class AnnonceController extends Controller
         ]);
     }
 
-    public function getAnnonce_enAttente(){
+    public function getAnnonce_enAttente()
+    {
 
-        $annonces=Annonce::where('status','en attente')->get();
+        $annonces = Annonce::where('status', 'en attente')->get();
 
         return response()->json([
             'status' => 200,
@@ -107,14 +110,14 @@ class AnnonceController extends Controller
     public function create(Request $request)
 
     {
-// Check if the user is logged in
-    if (!auth()->check()) {
+        // Check if the user is logged in
+        if (!auth()->check()) {
 
-        return response()->json([
-            'status' => 401,
-            'message' => 'Unauthorized. Please log in to proceed.',
-        ], 401);
-    }
+            return response()->json([
+                'status' => 401,
+                'message' => 'Unauthorized. Please log in to proceed.',
+            ], 401);
+        }
 
         $user = auth()->user();
 
@@ -150,46 +153,46 @@ class AnnonceController extends Controller
         if ($request->hasFile('images')) {
             $flaskUrl = env('FLASK_URL', 'http://localhost:5000/flouter');
             $multipart = [];
-    
+
             foreach ($request->file('images') as $file) {
                 $multipart[] = [
-                    'name' => 'images', 
+                    'name' => 'images',
                     'contents' => fopen($file->path(), 'r'),
                     'filename' => $file->getClientOriginalName()
                 ];
             }
-    
+
             $response = Http::timeout(120)->attach($multipart)->post($flaskUrl);
-    
+
             if ($response->failed()) {
                 return response()->json([
                     'status' => 500,
                     'message' => 'Échec du traitement des images: ' . $response->body()
                 ], 500);
             }
-    
+
             $responseData = $response->json();
-    
+
             if (isset($responseData['error'])) {
                 return response()->json([
                     'status' => 500,
                     'message' => $responseData['error']
                 ], 500);
             }
-    
+
             foreach ($responseData['resultats'] as $result) {
                 $imageResponse = Http::get($result['url']);
-    
+
                 if (!$imageResponse->successful()) {
                     return response()->json([
                         'status' => 500,
                         'message' => 'Échec du téléchargement de l\'image traitée'
                     ], 500);
                 }
-    
+
                 $path = 'blurred_images/' . $result['fichier'];
                 Storage::disk('public')->put($path, $imageResponse->body());
-    
+
                 $uploadedImages[] = [
                     'chemin' => $path,
                     'url'    => asset('storage/' . $path),
@@ -198,30 +201,30 @@ class AnnonceController extends Controller
                 ];
             }
         }
-    
 
 
 
-    
-    // Append additional data
-    $data['Ref_id_user'] = $user->_id;
-    $data['is_reported'] = false;
-    $data['status']='en attente';
-    $data['reported_by'] = [];
 
-    // Override images field with our stored metadata if images were uploaded
-    if (!empty($uploadedImages)) {
-        $data['images'] = $uploadedImages;
+
+        // Append additional data
+        $data['Ref_id_user'] = $user->_id;
+        $data['is_reported'] = false;
+        $data['status'] = 'en attente';
+        $data['reported_by'] = [];
+
+        // Override images field with our stored metadata if images were uploaded
+        if (!empty($uploadedImages)) {
+            $data['images'] = $uploadedImages;
+        }
+
+        // Create the annonce
+        $annonce = Annonce::create($data);
+
+        return response()->json([
+            'status' => 201,
+            'data'   => $annonce
+        ]);
     }
-
-    // Create the annonce
-    $annonce = Annonce::create($data);
-
-    return response()->json([
-        'status' => 201,
-        'data'   => $annonce
-    ]);
-}
 
 
 
@@ -269,7 +272,7 @@ class AnnonceController extends Controller
 
 
 
-    public function update(Request $request, $id)
+    public function update($id, Request $request)
     {
         $annonce = Annonce::find($id);
         if (!$annonce) {
@@ -278,16 +281,16 @@ class AnnonceController extends Controller
                 'data' => null
             ]);
         }
-        \Log::debug('Incoming payload:', $request->all());
 
-        $request->validate([
+
+        $data = $request->validate([
             'Titre' => 'string|max:255',
             'Description' => 'string',
             'DatePub' => 'date',
             'Prix' => 'numeric',
             'isSponsored' => 'boolean',
             'status' => 'string|in:en attente,vendue',
-    
+
             'vehicule' => 'array',
             'vehicule.Categorie' => 'string',
             'vehicule.Marque' => 'string',
@@ -297,49 +300,96 @@ class AnnonceController extends Controller
             'vehicule.DateDeMiseEnCirculation' => 'date',
             'vehicule.Cylindre' => 'string',
             'vehicule.Kilométrage' => 'numeric',
-            'vehicule.nbPortes' => 'string',
+            'vehicule.nbPortes' => 'numeric',
             'vehicule.boiteVitesse' => 'string|in:automatique,manuelle',
             'vehicule.etat' => 'string|in:neuf,excellent,correct,endommagé',
             'vehicule.equipement' => 'string',
-    
-            'images' => 'nullable|array',
-            'images.*.chemin' => 'string',
-            'images.*.format' => 'string',
-            'images.*.taille' => 'string',
+
+            'images'                     => 'nullable|array',
+            'images.*'                   => 'file|mimes:jpeg,png,jpg,gif,pdf|max:5120',
         ]);
-    
-        // Champs simples
+
+
+        $uploadedImages = [];
+
+        if ($request->hasFile('images')) {
+            $flaskUrl = env('FLASK_URL', 'http://localhost:5000/flouter');
+            $multipart = [];
+
+            foreach ($request->file('images') as $file) {
+                $multipart[] = [
+                    'name' => 'images',
+                    'contents' => fopen($file->path(), 'r'),
+                    'filename' => $file->getClientOriginalName()
+                ];
+            }
+
+            $response = Http::timeout(120)->attach($multipart)->post($flaskUrl);
+
+            if ($response->failed()) {
+                return response()->json([
+                    'status' => 500,
+                    'message' => 'Échec du traitement des images: ' . $response->body()
+                ], 500);
+            }
+
+            $responseData = $response->json();
+
+            if (isset($responseData['error'])) {
+                return response()->json([
+                    'status' => 500,
+                    'message' => $responseData['error']
+                ], 500);
+            }
+
+            foreach ($responseData['resultats'] as $result) {
+                $imageResponse = Http::get($result['url']);
+
+                if (!$imageResponse->successful()) {
+                    return response()->json([
+                        'status' => 500,
+                        'message' => 'Échec du téléchargement de l\'image traitée'
+                    ], 500);
+                }
+
+                $path = 'blurred_images/' . $result['fichier'];
+                Storage::disk('public')->put($path, $imageResponse->body());
+
+                $uploadedImages[] = [
+                    'chemin' => $path,
+                    'url'    => asset('storage/' . $path),
+                    'format' => pathinfo($result['fichier'], PATHINFO_EXTENSION),
+                    'taille' => Storage::disk('public')->size($path)
+                ];
+            }
+        }
+
+
+        // Mise à jour des champs simples
         $annonce->fill($request->except(['vehicule', 'images']));
-    
+
+
         // Mise à jour des champs spécifiques dans le sous-document `vehicule`
         if ($request->has('vehicule')) {
             foreach ($request->input('vehicule') as $key => $value) {
                 $annonce->vehicule->$key = $value;
             }
         }
-    
+
         // Images (si besoin)
-        if ($request->hasFile('images')) {
-            $images = [];
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('images', 'public');
-                $images[] = [
-                    'chemin' => asset('storage/' . $path),
-                    'format' => $image->getClientOriginalExtension(),
-                    'taille' => $image->getSize(),
-                ];
-            }
-            $annonce->images = $images;
+        if (!empty($uploadedImages)) {
+            $data['images'] = $uploadedImages;
         }
-    
-        $annonce->save();
-    
+
+        $annonce->update($data);
+
+        // Log::info("Données de l'annonce :", $annonce);
         return response()->json([
             'status' => 201,
             'data' => $annonce
         ]);
     }
-    
+
 
 
     public function destroy($id)

@@ -44,4 +44,9 @@ class Annonce extends Model
     {
         return $this->hasMany(Sponsorship::class, 'id_annonce');
     }
+
+   /*  protected $casts = [
+    
+    'images' => 'array'
+]; */
 }

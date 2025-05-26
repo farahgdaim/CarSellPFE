@@ -274,6 +274,8 @@ class AnnonceController extends Controller
 
     public function update($id, Request $request)
     {
+       
+
         $annonce = Annonce::find($id);
         if (!$annonce) {
             return response()->json([
@@ -281,13 +283,17 @@ class AnnonceController extends Controller
                 'data' => null
             ]);
         }
+        /*$data=$request->all();
+         return response()->json([
+                'status' => 404,
+                'data' => $data['images']
+            ]); */
 
-
-        $data = $request->validate([
-            'Titre' => 'string|max:255',
-            'Description' => 'string',
+           $data = $request->validate([
+            'titre' => 'string|max:255',
+            'description' => 'string',
             'DatePub' => 'date',
-            'Prix' => 'numeric',
+            'prix' => 'numeric',
             'isSponsored' => 'boolean',
             'status' => 'string|in:en attente,vendue',
 
@@ -305,12 +311,16 @@ class AnnonceController extends Controller
             'vehicule.etat' => 'string|in:neuf,excellent,correct,endommagé',
             'vehicule.equipement' => 'string',
 
-            'images'                     => 'nullable|array',
-            'images.*'                   => 'file|mimes:jpeg,png,jpg,gif,pdf|max:5120',
-        ]);
+            /* 'images'                     => 'nullable|array',
+            'images.*'                   => 'file|mimes:jpeg,png,jpg,gif,pdf|max:5120', */
+        ]); 
 
+        /*  return response()->json([
+            'status' => 201,
+            'data' =>  $data['description']
+        ]); */
+        /* $uploadedImages = [];
 
-        $uploadedImages = [];
 
         if ($request->hasFile('images')) {
             $flaskUrl = env('FLASK_URL', 'http://localhost:5000/flouter');
@@ -325,6 +335,7 @@ class AnnonceController extends Controller
             }
 
             $response = Http::timeout(120)->attach($multipart)->post($flaskUrl);
+
 
             if ($response->failed()) {
                 return response()->json([
@@ -362,25 +373,29 @@ class AnnonceController extends Controller
                     'taille' => Storage::disk('public')->size($path)
                 ];
             }
-        }
+            return response()->json([
+                'status' => 600,
+                'message' => $uploadedImages
+            ]);
 
+      
+            $data['images'] = $uploadedImages;
+        }
+ */
 
         // Mise à jour des champs simples
-        $annonce->fill($request->except(['vehicule', 'images']));
-
+        /*  $annonce->fill($request->except(['vehicule', 'images']));
 
         // Mise à jour des champs spécifiques dans le sous-document `vehicule`
         if ($request->has('vehicule')) {
             foreach ($request->input('vehicule') as $key => $value) {
-                $annonce->vehicule->$key = $value;
+                $annonce->vehicule[$key] = $value;
             }
-        }
+        } */
 
-        // Images (si besoin)
-        if (!empty($uploadedImages)) {
-            $data['images'] = $uploadedImages;
-        }
-
+      /* return response()->json([
+            'data' => $uploadedImages
+        ]);  */
         $annonce->update($data);
 
         // Log::info("Données de l'annonce :", $annonce);
@@ -389,6 +404,97 @@ class AnnonceController extends Controller
             'data' => $annonce
         ]);
     }
+
+    public function updateImages($id, Request $request)
+{
+    $annonce = Annonce::find($id);
+
+    if (!$annonce) {
+        return response()->json([
+            'status' => 404,
+            'message' => 'Annonce non trouvée'
+        ]);
+    }
+
+    $request->validate([
+        'images' => 'sometimes|array',
+        'images.*' => 'sometimes|file|mimes:jpeg,png,jpg,gif,pdf|max:5120'
+    ]);
+
+    $uploadedImages = [];
+
+    if ($request->hasFile('images')) {
+        $flaskUrl = env('FLASK_URL', 'http://localhost:5000/flouter');
+        $multipart = [];
+
+        foreach ($request->file('images') as $file) {
+            $multipart[] = [
+                'name' => 'images',
+                'contents' => fopen($file->path(), 'r'),
+                'filename' => $file->getClientOriginalName()
+            ];
+        }
+
+        $response = Http::timeout(120)->attach($multipart)->post($flaskUrl);
+
+        if ($response->failed()) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Échec du traitement des images: ' . $response->body()
+            ]);
+        }
+
+        $responseData = $response->json();
+
+        if (isset($responseData['error'])) {
+            return response()->json([
+                'status' => 500,
+                'message' => $responseData['error']
+            ]);
+        }
+
+        foreach ($responseData['resultats'] as $result) {
+            $imageResponse = Http::get($result['url']);
+
+            if (!$imageResponse->successful()) {
+                return response()->json([
+                    'status' => 500,
+                    'message' => 'Échec du téléchargement de l\'image traitée'
+                ]);
+            }
+
+            $path = 'blurred_images/' . $result['fichier'];
+            Storage::disk('public')->put($path, $imageResponse->body());
+
+            $uploadedImages[] = [
+                'chemin' => $path,
+                'url'    => asset('storage/' . $path),
+                'format' => pathinfo($result['fichier'], PATHINFO_EXTENSION),
+                'taille' => Storage::disk('public')->size($path)
+            ];
+        }
+
+        // Ici, tu peux enregistrer les images dans ton modèle si besoin :
+        $annonce->images = $uploadedImages;
+        $annonce->save();
+
+        return response()->json([
+            'status' => 201,
+            'message' => 'Images mises à jour',
+            'data' => $uploadedImages
+        ]);
+    }
+     return response()->json([
+        'status' => 200,
+        'message' => 'Aucune image à mettre à jour'
+    ]);
+
+    /* return response()->json([
+        'status' => 400,
+        'message' => 'Aucun fichier reçu'
+    ]); */
+}
+
 
 
 

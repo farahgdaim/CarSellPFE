@@ -102,6 +102,7 @@ Route::prefix('utilisateur')->middleware('auth')->group(function () {
     Route::put('/Updateannonces/{id}', [AnnonceController::class, 'update']);
     Route::post('/reportAnnonce/{id}', [AnnonceController::class, 'reportAnnonce']);
     Route::post('/reportRapport/{id}', [UtilisateurController::class, 'reportRapportExpertsie']);
+    Route::post('/Updateannonces/{id}/images', [AnnonceController::class, 'updateImages']);
 
     // Sponsoring
     Route::get('/sponsoring', [SponsoringController::class, 'getSponsoring']);

@@ -149,7 +149,12 @@ class UtilisateurController extends Controller
 }
 
 public function getDemandeInfo($annonceId){
-    $demande = DemandeEvaluation::where('ref_id_annonce', $annonceId)->first();
+    $user = auth()->user();
+
+    // Recherche de la demande d'évaluation liée à l'annonce
+    $demande = DemandeEvaluation::where('ref_id_annonce', $annonceId)
+                                ->where('ref_id_demandeur', $user->_id) // Access user ID properly
+                                ->first();
     if (!$demande){
         return response()->json([
             'status' => 404,
@@ -166,14 +171,20 @@ public function getDemandeInfo($annonceId){
 }
 public function checkRapportStatus($annonceId)
 {
+    $user = auth()->user();
+
     // Recherche de la demande d'évaluation liée à l'annonce
-    $demande = DemandeEvaluation::where('ref_id_annonce', $annonceId)->first();
+    $demande = DemandeEvaluation::where('ref_id_annonce', $annonceId)
+                                ->where('ref_id_demandeur', $user->_id) // Access user ID properly
+                                ->first();
 
     if (!$demande) {
         return response()->json([
             'status' => 404,
             'data' => [
-                'message' => 'Aucune demande trouvée pour cette annonce.'
+                'message' => 'Aucune demande trouvée pour cette annonce.',
+                'ref_id_annonce' => $annonceId,
+                'ref_id_demandeur' => (string) $user->_id
             ]
         ]);
     }
@@ -190,7 +201,7 @@ public function checkRapportStatus($annonceId)
         return response()->json([
             'status' => 200,
             'data' => [
-                'rapport_genere' => false
+                'rapport_genere' => false,
             ]
         ]);
     }

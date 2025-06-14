@@ -17,9 +17,11 @@ use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\ContratController;
 use App\http\Controllers\ConversationController;
 use App\Http\Controllers\SponsorshipController;
+use App\Http\Controllers\PriceController;
 use App\Models\Annonce;
 use App\Models\Contrat;
 
+Route::post('predict-price', [PriceController::class, 'predict']);
 
 /*
 |--------------------------------------------------------------------------

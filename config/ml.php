@@ -1,0 +1,57 @@
+<?php
+return [
+  'brand_weights'    => [
+    'BMW' => 1.13,
+    'Mercedes' => 1.15,
+    'Audi' => 1.11,
+    'Porsche' => 1.20,
+    'Volvo' => 1.05,
+    'Land Rover' => 1.15,
+    'Jaguar' => 1.10,
+    'Maserati' => 1.18,
+    'Mini' => 1.03,
+    'Volkswagen' => 1.00,
+    'Toyota' => 1.02,
+    'Hyundai' => 0.98,
+    'Kia' => 0.97,
+    'Peugeot' => 0.95,
+    'Renault' => 0.94,
+    'Citroen' => 0.93,
+    'Opel' => 0.92,
+    'Fiat' => 0.90,
+    'Ford' => 0.96,
+    'Nissan' => 0.97,
+    'Skoda' => 0.98,
+    'Dacia' => 0.85,
+    'Suzuki' => 0.90,
+    'Mitsubishi' => 0.91,
+    'Chevrolet' => 0.88,
+    'Smart' => 0.95,
+    'Alfa Romeo' => 1.05,
+    'Lancia' => 0.90,
+    'DS Automobiles' => 0.98,
+
+    // Chinese/Emerging brands often have lower retention initially in some markets
+    'MG' => 0.79,
+    'BYD' => 0.74,
+    'Aiways' => 0.69,
+    'Great Wall Motors' => 0.74,
+    'Chery' => 0.69,
+    'Isuzu' => 0.89,
+    'Mahindra' => 0.79,
+    'Tata' => 0.77,
+    'Proton' => 0.74,
+    'Changan' => 0.69,
+    'Geely' => 0.71,
+    'Haima' => 0.67,
+    'Brilliance' => 0.64,
+
+     '__default__'=> 0.90 // Default for brands not listed
+  ],
+    'etat_weights'     => [
+        'neuf' => 1.00,
+        'excellent' => 0.82,
+        'correct' => 0.65,
+        'endommagé' => 0.43
+    ],
+];
